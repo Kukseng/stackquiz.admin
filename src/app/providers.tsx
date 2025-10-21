@@ -1,12 +1,37 @@
-"use client";
+"use client"
 
-import { SidebarProvider } from "@/components/Layouts/sidebar/sidebar-context";
-import { ThemeProvider } from "next-themes";
+import { Suspense } from "react"
+import LayoutWrapper from "./LayoutWrapper"
+import { LanguageProvider } from "../context/LanguageContext"
+import { Provider } from "react-redux"
+import { store } from "@/store/store"
+import { SessionProvider } from "next-auth/react"
 
-export function Providers({ children }: { children: React.ReactNode }) {
+
+export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider defaultTheme="light" attribute="class">
-      <SidebarProvider>{children}</SidebarProvider>
-    </ThemeProvider>
-  );
+    <Provider store={store}>
+      <SessionProvider>
+        <LanguageProvider>
+          <Suspense fallback={null}>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </Suspense>
+        </LanguageProvider>
+      </SessionProvider>
+    </Provider>
+  )
 }
+
+
+// "use client";
+
+// import { SessionProvider } from "next-auth/react";
+// import { ReactNode } from "react";
+
+// interface ProvidersProps {
+//   children: ReactNode;
+// }
+
+// export default function Providers({ children }: ProvidersProps) {
+//   return <SessionProvider>{children}</SessionProvider>;
+// }

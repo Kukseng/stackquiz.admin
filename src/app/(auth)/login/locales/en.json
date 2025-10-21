@@ -1,0 +1,31 @@
+{
+  "signup": {
+    "title": "Sign",
+    "up": "Up",
+    "subtitle": "Create your personal account to get started.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "createAccount": "Create Account",
+    "loading": "Signing Up...",
+    "or": "or",
+    "already": "Already have an account?",
+    "login": "Login"
+  },
+  "login": {
+    "title": "Log",
+    "in": "In",
+    "subtitle": "Enter your account to continue.",
+    "username": "Username",
+    "password": "Password",
+    "loginButton": "Login",
+    "loading": "Logging In...",
+    "forgotPassword": "Forgot password?",
+    "or": "or",
+    "noAccount": "Don't have an account?",
+    "signup": "Sign Up"
+  }
+}

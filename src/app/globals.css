@@ -1,0 +1,334 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+.en-font {
+  font-family: var(--font-dm-sans);
+}
+
+.kh-font {
+  font-family: var(--font-kantumruy);
+}
+:root {
+  --font-dm-sans: "DM Sans", sans-serif;
+  --font-kantumruy: "Kantumruy Pro", sans-serif;
+  /* Core colors */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  /* Primary / Secondary colors */
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  /* Neutrals */
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  /* Fixed destructive foreground to be white instead of same as destructive */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* Charts */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Layout */
+  --radius: 0.625rem;
+  /* --padding-x: 80px; */
+  --section-margin: 80px;
+
+  /* Added proper cosmic color palette */
+  --cosmic-indigo: #1e1b4b;
+  --cosmic-purple: #312e81;
+  --cosmic-deep: #581c87;
+  --neon-orange: #f97316;
+  --neon-pink: #ec4899;
+  --electric-blue: #3b82f6;
+  --cosmic-text: #e2e8f0;
+  --cosmic-muted: #dddfe2;
+  /* Sidebar colors */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+  --animate-background-position-spin: background-position-spin 3000ms infinite
+    alternate;
+  @keyframes background-position-spin {
+    0% {
+      background-position: top center;
+    }
+    100% {
+      background-position: bottom center;
+    }
+  }
+}
+
+html {
+  overflow-x: hidden;
+ 
+}
+
+/* secondary color */
+.btn-secondary {
+  background: linear-gradient(
+    to bottom,
+    #f4e795 0%,
+    #f4b331 26%,
+    #f4b331 63%,
+    #f48631 80%,
+    #f46e31 93%
+  );
+}
+
+.bg-glass {
+  @apply bg-white/30 backdrop-blur-sm border border-white/20 rounded-xl;
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+}
+.btn-text {
+  color: #0d3272;
+}
+.bg-footer {
+  background-color: #0d3272;
+}
+.font-size {
+  font-size: 20px;
+}
+.font-size-nav {
+  font-size: 18px;
+}
+
+.box-radius {
+  border-radius: 20px;
+}
+
+/* scale */
+.perspective {
+  perspective: 500px;
+}
+
+.card-glow {
+  /* transition: transform 0.5s ease, box-shadow 0.5s ease; */
+  cursor: pointer;
+}
+
+.card-glow:hover,
+.card-glow:focus {
+  /* transform: scale(1.1); */
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+}
+
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 4s ease infinite;
+}
+
+.glow-pink {
+  filter: drop-shadow(0 0 12px rgba(236, 72, 153, 0.8));
+  animation: glowAnim 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes glowAnim {
+  0% {
+    filter: drop-shadow(0 0 12px rgba(54, 183, 179, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(21, 81, 178, 0.9));
+  }
+  100% {
+    filter: drop-shadow(0 0 15px rgba(71, 150, 211, 0.7));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    font-family: var(--font-dm-sans);
+    @apply bg-background text-foreground;
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding-left: var(--padding-x);
+    padding-right: var(--padding-x);
+  }
+
+  .bg-gray-screen-page {
+    background-color: rgba(26, 25, 25, 0.3);
+  }
+  section {
+    margin-bottom: var(--section-margin);
+  }
+
+  .text-nav {
+    color: white;
+    text-decoration: none;
+  }
+
+  .text-nav:hover {
+    color: #ffcc00;
+    text-underline-offset: 4px;
+  }
+
+  .text-underline {
+    text-decoration: underline;
+    text-underline-offset: 18px;
+  }
+  .text-yellow {
+    color: #ffcc00;
+  }
+
+  .card {
+    border-radius: var(--radius);
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .button {
+    border-radius: var(--radius);
+    padding: 0.75rem 1.5rem;
+    /* background: linear-gradient(to bottom, #0D6FCA 0%, #26006F 50%, #4B0384 100%); */
+    color: white;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 111, 202, 0.4);
+  }
+
+  /* Added cosmic utility classes for the space theme */
+  .cosmic-bg {
+    background: linear-gradient(
+      to bottom,
+      #0d6fca 0%,
+      #26006f 50%,
+      #4b0384 100%
+    );
+  }
+
+  .cosmic-text {
+    color: var(--cosmic-text);
+  }
+
+  .cosmic-muted {
+    color: var(--cosmic-muted);
+  }
+
+  .neon-orange {
+    color: var(--neon-orange);
+  }
+
+  .neon-pink {
+    color: var(--neon-pink);
+  }
+
+  .electric-blue {
+    color: var(--electric-blue);
+  }
+
+
+  @keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+}
