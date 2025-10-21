@@ -1,11 +1,14 @@
 // ============================================================
-// 1. API Services - src/services/adminApi.ts
+// API Services - src/services/adminApi.ts
 // ============================================================
+
 import { baseApi } from "../lib/api/baseApi";
 
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    // ============================================================
     // User endpoints
+    // ============================================================
     getAllUsers: builder.query<any, void>({
       query: () => "users",
       providesTags: ["User"],
@@ -14,6 +17,15 @@ export const adminApi = baseApi.injectEndpoints({
     getCurrentUser: builder.query<any, void>({
       query: () => "users/me",
       providesTags: ["User"],
+    }),
+
+    updateCurrentUser: builder.mutation<any, any>({
+      query: (data) => ({
+        url: "users/me",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
     }),
 
     updateUser: builder.mutation<any, { userId: string; data: any }>({
@@ -33,7 +45,9 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
+    // ============================================================
     // Quiz endpoints
+    // ============================================================
     getAllQuizzes: builder.query<any, void>({
       query: () => "quizzes",
       providesTags: ["Quiz"],
@@ -53,14 +67,18 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["Quiz"],
     }),
 
+    // ============================================================
     // Analytics endpoints
+    // ============================================================
     getUserActivity: builder.query<any, string | void>({
-      query: (timeRange) => 
+      query: (timeRange) =>
         timeRange ? `analytics/activity/${timeRange}` : "analytics/activity",
       providesTags: ["User"],
     }),
 
+    // ============================================================
     // Reports endpoints
+    // ============================================================
     getQuizReports: builder.query<any, string>({
       query: (quizId) => `quiz-reports/quizzes/${quizId}`,
       providesTags: ["Quiz"],
@@ -71,7 +89,9 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ["Quiz"],
     }),
 
+    // ============================================================
     // Feedback endpoints
+    // ============================================================
     getAllFeedback: builder.query<any, void>({
       query: () => "quizzes/feedback",
       providesTags: ["Quiz"],
@@ -82,7 +102,9 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ["Quiz"],
     }),
 
+    // ============================================================
     // Categories
+    // ============================================================
     getCategories: builder.query<any, void>({
       query: () => "categories",
       providesTags: ["Category"],
@@ -97,10 +119,30 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["Category"],
     }),
 
+    // ============================================================
     // Sessions
+    // ============================================================
     getMySessions: builder.query<any, void>({
       query: () => "quiz-sessions/me",
       providesTags: ["Session"],
+    }),
+
+    // ============================================================
+    // Media upload endpoint - Fixed to use FormData
+    // ============================================================
+    uploadSingleMedia: builder.mutation<{ uri: string; [key: string]: any }, File>({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        return {
+          url: "medias/upload-single",
+          method: "POST",
+          body: formData,
+          // Don't set Content-Type header - let browser set it with boundary
+          formData: true,
+        };
+      },
     }),
   }),
 });
@@ -108,6 +150,7 @@ export const adminApi = baseApi.injectEndpoints({
 export const {
   useGetAllUsersQuery,
   useGetCurrentUserQuery,
+  useUpdateCurrentUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
   useGetAllQuizzesQuery,
@@ -121,4 +164,5 @@ export const {
   useGetCategoriesQuery,
   useCreateCategoryMutation,
   useGetMySessionsQuery,
+  useUploadSingleMediaMutation,
 } = adminApi;

@@ -27,9 +27,20 @@ const withAuth: BaseQueryFn<
           headers: { ...((args.headers as Record<string, string>) ?? {}) },
         };
 
-  if (token) (req.headers as any)["Authorization"] = `Bearer ${token}`;
-  if (!(req.headers as any)["Content-Type"] && (req as any).body) {
-    (req.headers as any)["Content-Type"] = "application/json";
+  // Add authorization header if token exists
+  if (token) {
+    (req.headers as any)["Authorization"] = `Bearer ${token}`;
+  }
+
+  // Only set Content-Type for non-FormData requests
+  // FormData should not have Content-Type set manually (browser sets it with boundary)
+  const isFormData = (req as any).body instanceof FormData;
+  
+  if (!isFormData) {
+    // For regular JSON requests
+    if (!(req.headers as any)["Content-Type"] && (req as any).body) {
+      (req.headers as any)["Content-Type"] = "application/json";
+    }
   }
 
   return raw(req, api, extra);

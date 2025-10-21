@@ -44,6 +44,40 @@ function resolveApiBase(): string {
   return base.replace(/\/+$/, "");
 }
 
+// Decode JWT without verification (for reading roles)
+function decodeJWT(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+    const payload = parts[1];
+    const decoded = Buffer.from(payload, 'base64').toString('utf-8');
+    return JSON.parse(decoded);
+  } catch (error) {
+    console.error('[NextAuth] Error decoding JWT:', error);
+    return null;
+  }
+}
+
+function hasAdminRole(token: string): boolean {
+  const decoded = decodeJWT(token);
+  if (!decoded) {
+    return false;
+  }
+  
+  const roles = decoded.realm_access?.roles || [];
+  const hasAdmin = roles.includes('ADMIN');
+  
+  console.log('[NextAuth] Checking admin role:', {
+    roles,
+    hasAdmin,
+    email: decoded.email || decoded.preferred_username
+  });
+  
+  return hasAdmin;
+}
+
 async function post(path: string, body: unknown) {
   const base = resolveApiBase();
   const url = `${base}/${String(path).replace(/^\/+/, "")}`;
@@ -95,11 +129,26 @@ async function refreshAccessToken(token: any) {
       throw refreshedTokens;
     }
 
+    const newAccessToken = refreshedTokens.data.access_token;
+    
+    // Check if refreshed token still has ADMIN role
+    if (!hasAdminRole(newAccessToken)) {
+      console.error('[NextAuth] User lost ADMIN role after refresh');
+      return {
+        ...token,
+        error: "NoAdminRole",
+      };
+    }
+
+    const decoded = decodeJWT(newAccessToken);
+
     return {
       ...token,
-      apiAccessToken: refreshedTokens.data.access_token,
+      apiAccessToken: newAccessToken,
       apiAccessTokenExpires: Date.now() + (refreshedTokens.data.expires_in ?? 3600) * 1000,
       apiRefreshToken: refreshedTokens.data.refresh_token ?? token.apiRefreshToken,
+      realm_access: decoded?.realm_access,
+      resource_access: decoded?.resource_access,
     };
   } catch (error) {
     console.error("[NextAuth] Error refreshing access token:", error);
@@ -110,9 +159,6 @@ async function refreshAccessToken(token: any) {
   }
 }
 
-// ============================================================
-// NextAuth Configuration
-// ============================================================
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: { 
@@ -185,15 +231,26 @@ const authOptions: NextAuthOptions = {
             return null;
           }
 
+          // CHECK IF USER HAS ADMIN ROLE IN JWT
+          if (!hasAdminRole(data.access_token)) {
+            console.error(`[CredentialsProvider] Access denied: User does not have ADMIN role`);
+            return null;
+          }
+
+          // Decode JWT to extract user info and roles
+          const decoded = decodeJWT(data.access_token);
+
           return {
-            id: data.userId ?? data.email ?? credentials.username,
-            name: data.name ?? data.username ?? credentials.username,
-            email: data.email ?? null,
+            id: data.userId ?? decoded?.sub ?? credentials.username,
+            name: decoded?.name ?? data.name ?? credentials.username,
+            email: decoded?.email ?? data.email ?? null,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
             apiAccessToken: data.access_token,
             apiRefreshToken: data.refresh_token,
             expiresIn: data.expires_in ?? 3600,
+            realm_access: decoded?.realm_access,
+            resource_access: decoded?.resource_access,
           };
         } catch (e) {
           console.error("[CredentialsProvider] Login exception:", e);
@@ -223,12 +280,13 @@ const authOptions: NextAuthOptions = {
           token.apiAccessTokenExpires = Date.now() + ((user as any).expiresIn ?? 3600) * 1000;
           token.userId = (user as any).id;
           token.email = email;
+          token.realm_access = (user as any).realm_access;
+          token.resource_access = (user as any).resource_access;
           
-          console.log(`[NextAuth] Credentials login success for: ${email}`);
+          console.log(`[NextAuth] Credentials login success for ADMIN: ${email}`);
           return token;
         }
 
-        // OAuth providers - register/exchange with backend
         if (email) {
           const givenName =
             (profile as any)?.given_name ??
@@ -263,13 +321,25 @@ const authOptions: NextAuthOptions = {
               const data = await r.json();
               const payload = (data as any).data ?? data;
               
-              token.apiAccessToken = payload.accessToken ?? payload.access_token ?? null;
+              const accessToken = payload.accessToken ?? payload.access_token;
+              
+              if (!hasAdminRole(accessToken)) {
+                console.error(`[NextAuth] OAuth access denied: User does not have ADMIN role`);
+                token.error = "NoAdminRole";
+                return token;
+              }
+
+              const decoded = decodeJWT(accessToken);
+              
+              token.apiAccessToken = accessToken;
               token.apiRefreshToken = payload.refreshToken ?? payload.refresh_token ?? null;
               token.apiAccessTokenExpires = Date.now() + (payload.expiresIn ?? payload.expires_in ?? 3600) * 1000;
               token.email = email;
-              token.userId = payload.userId ?? payload.user_id ?? null;
+              token.userId = payload.userId ?? payload.user_id ?? decoded?.sub ?? null;
+              token.realm_access = decoded?.realm_access;
+              token.resource_access = decoded?.resource_access;
               
-              console.log(`[NextAuth] OAuth registration success for: ${email}`);
+              console.log(`[NextAuth] OAuth registration success for ADMIN: ${email}`);
             } else {
               console.error(`[NextAuth] OAuth registration failed for: ${email}`);
               token.error = "OAuthRegistrationError";
@@ -291,6 +361,11 @@ const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
+      // Check for admin role error
+      if (token.error === "NoAdminRole") {
+        throw new Error("Access denied: ADMIN role required");
+      }
+
       // Pass token data to session
       (session as any).apiAccessToken = token.apiAccessToken ?? null;
       (session as any).apiRefreshToken = token.apiRefreshToken ?? null;
@@ -299,10 +374,12 @@ const authOptions: NextAuthOptions = {
       (session as any).email = token.email ?? session.user?.email ?? null;
       (session as any).error = token.error ?? null;
 
-      // Update user info
+      // Update user info with roles
       if (session.user) {
         session.user.email = token.email as string ?? session.user.email;
         (session.user as any).id = token.userId ?? (session.user as any).id;
+        session.user.realm_access = token.realm_access as any;
+        session.user.resource_access = token.resource_access as any;
       }
 
       return session;
@@ -322,12 +399,14 @@ const authOptions: NextAuthOptions = {
         userId: user.id,
         email: user.email,
         provider: account?.provider,
+        roles: (user as any)?.realm_access?.roles,
       });
     },
     async signOut({ token }) {
       console.log(`[NextAuth] User signed out:`, {
         userId: (token as any)?.userId,
         email: (token as any)?.email,
+        roles: (token as any)?.realm_access?.roles,
       });
     },
   },
