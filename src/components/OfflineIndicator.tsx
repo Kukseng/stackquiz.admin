@@ -37,7 +37,8 @@ export default function OfflineIndicator() {
   
           <div className="w-34 h-34 rounded-full bg-gray-100 border-4 border-blue-800 flex flex-col items-center justify-center shadow-lg">
           
-              <div>  <Image 
+              <div>  
+                <Image 
                 src="/logo-sq.png"
                 width={74}
                 height={74}
