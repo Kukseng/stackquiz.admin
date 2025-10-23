@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { useGetQuizzesQuery } from "@/services/quizApi";
+import { useGetQuizzesQuery } from "@/services/adminApi";
 
 export default function QuizList() {
   const { data, error, isLoading } = useGetQuizzesQuery();

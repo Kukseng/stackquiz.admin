@@ -60,6 +60,10 @@ export const baseApi = createApi({
     "ParticipantAnswer",
     "Leaderboard",
     "Session",
+    "Analytics",
+    "AnalyticsGraph",
+    "Quizzes",
+    // "Users"
   ],
   endpoints: () => ({}),
 });
