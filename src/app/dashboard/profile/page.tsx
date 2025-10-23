@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { 
   useGetCurrentUserQuery, 
@@ -193,9 +194,11 @@ export default function ProfilePage() {
                 onClick={handleImageClick}
               >
                 {previewImage ? (
-                  <img 
+                  <Image
                     src={previewImage} 
                     alt="Profile" 
+                    width={128}
+                    height={128}
                     className="w-full h-full object-cover"
                   />
                 ) : (

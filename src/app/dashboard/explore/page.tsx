@@ -3,11 +3,11 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useGetAllQuizzeQuery, useGetCategoriesQuery } from '@/services/adminApi';
-import { Search, Star, Users, Clock, Filter, TrendingUp, Sparkles } from 'lucide-react';
+import { Search, Users, Clock, Filter, TrendingUp, Sparkles } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ExplorePage() {
@@ -123,7 +123,7 @@ export default function ExplorePage() {
               <TrendingUp className="h-4 w-4 mr-2" />
               All Quizzes
             </Button>
-            {categories?.map((cat: any, index: number) => (
+            {categories?.map((cat: any) => (
               <Button
                 key={cat.id}
                 variant={selectedCategory === cat.name ? 'default' : 'outline'}

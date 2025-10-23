@@ -284,6 +284,12 @@ export default function AnalyticsComponent() {
 
   return (
       <div className="mx-auto p-6 space-y-6">
+         <div className="ml-6 sticky top-0 z-50">
+          <h1 className="text-3xl font-bold text-foreground mb-1.5">Analytics</h1>
+          <p className="text-sm text-muted-foreground">
+            Comprehensive insights into quiz performance and user engagement
+          </p>
+        </div>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
