@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 
 interface FormFieldProps {
@@ -7,13 +5,14 @@ interface FormFieldProps {
   label: string;
   type: string;
   value: string;
-  placeholder?: string;
+  placeholder: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   icon?: React.ReactNode;
   toggle?: () => void;
   toggleIcon?: React.ReactNode;
-  autoComplete?: string; // <-- add this
+  autoComplete?: string;
+  disabled?: boolean; // ✅ Add disabled
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -27,15 +26,17 @@ const FormField: React.FC<FormFieldProps> = ({
   icon,
   toggle,
   toggleIcon,
-  autoComplete, // <-- receive prop
+  autoComplete,
+  disabled,
 }) => {
   return (
-    <div className="flex flex-col">
-      <label htmlFor={id} className="text-gray-700 text-sm font-semibold mb-1">
+    <div className="space-y-1">
+      <label htmlFor={id} className="block text-sm font-semibold text-gray-700">
         {label}
       </label>
-      <div className="flex items-center border rounded-xl px-3 py-2 bg-gray-50 focus-within:ring-2 focus-within:ring-blue-400">
-        {icon && <span className="mr-2">{icon}</span>}
+
+      <div className="relative flex items-center">
+        {icon && <div className="absolute left-3">{icon}</div>}
         <input
           id={id}
           name={id}
@@ -43,18 +44,23 @@ const FormField: React.FC<FormFieldProps> = ({
           value={value}
           placeholder={placeholder}
           onChange={onChange}
-          autoComplete={autoComplete} // <-- use here
-          className="w-full outline-none bg-transparent text-gray-800 placeholder-gray-400"
+          autoComplete={autoComplete}
+          disabled={disabled} // ✅ apply prop
+          className={`w-full pl-10 pr-10 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+            error ? "border-red-500" : "border-gray-300"
+          } disabled:bg-gray-100 disabled:cursor-not-allowed`}
         />
-        {toggle && toggleIcon && (
-          <span onClick={toggle} className="ml-2">
+        {toggleIcon && (
+          <div className="absolute right-3" onClick={toggle}>
             {toggleIcon}
-          </span>
+          </div>
         )}
       </div>
-      {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 };
 
 export default FormField;
+export type { FormFieldProps };

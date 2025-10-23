@@ -376,10 +376,10 @@ const authOptions: NextAuthOptions = {
 
       // Update user info with roles
       if (session.user) {
-        session.user.email = token.email as string ?? session.user.email;
-        (session.user as any).id = token.userId ?? (session.user as any).id;
-        session.user.realm_access = token.realm_access as any;
-        session.user.resource_access = token.resource_access as any;
+          session.user.email = token.email ?? session.user.email;
+          (session.user as any).id = token.userId ?? (session.user as any).id;
+          (session.user as any).realm_access = token.realm_access;
+          (session.user as any).resource_access = token.resource_access;
       }
 
       return session;

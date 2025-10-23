@@ -1,14 +1,8 @@
-// ============================================================
-// API Services - src/services/adminApi.ts
-// ============================================================
 
 import { baseApi } from "../lib/api/baseApi";
 
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    // ============================================================
-    // User endpoints
-    // ============================================================
     getAllUsers: builder.query<any, void>({
       query: () => "users",
       providesTags: ["User"],
@@ -45,18 +39,13 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
-    // ============================================================
-    // Analytics endpoints
-    // ============================================================
+
     getUserActivity: builder.query<any, string | void>({
       query: (timeRange) =>
         timeRange ? `analytics/activity/${timeRange}` : "analytics/activity",
       providesTags: ["User"],
     }),
 
-    // ============================================================
-    // Reports endpoints
-    // ============================================================
     getQuizReports: builder.query<any, string>({
       query: (quizId) => `quiz-reports/quizzes/${quizId}`,
       providesTags: ["Quiz"],
@@ -67,9 +56,7 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ["Quiz"],
     }),
 
-    // ============================================================
-    // Feedback endpoints
-    // ============================================================
+
     getAllFeedback: builder.query<any, void>({
       query: () => "quizzes/feedback",
       providesTags: ["Quiz"],
@@ -80,9 +67,7 @@ export const adminApi = baseApi.injectEndpoints({
       providesTags: ["Quiz"],
     }),
 
-    // ============================================================
-    // Categories
-    // ============================================================
+
     getCategories: builder.query<any, void>({
       query: () => "categories",
       providesTags: ["Category"],
@@ -97,17 +82,12 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["Category"],
     }),
 
-    // ============================================================
-    // Sessions
-    // ============================================================
+
     getMySessions: builder.query<any, void>({
       query: () => "quiz-sessions/me",
       providesTags: ["Session"],
     }),
 
-    // ============================================================
-    // Admin Dashboard
-    // ============================================================
     getAdminDashboard: builder.query<DashboardStats, void>({
       query: () => ({
         url: "admin/dashboard",
@@ -123,9 +103,7 @@ export const adminApi = baseApi.injectEndpoints({
       }),
     }),
 
-    // ============================================================
-    // Quiz Management
-    // ============================================================
+
     getAllQuizzes: builder.query<Quiz[], { active?: boolean }>({
       query: ({ active = true }) => ({
         url: `quizzes?active=${active}`,
@@ -162,9 +140,6 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["Quizzes"],
     }),
 
-    // ============================================================
-    // Media upload endpoint - Fixed to use FormData
-    // ============================================================
     uploadSingleMedia: builder.mutation<{ uri: string; [key: string]: any }, File>({
       query: (file) => {
         const formData = new FormData();
@@ -196,16 +171,13 @@ export const {
   useUploadSingleMediaMutation,
   useGetAdminDashboardQuery,
   useGetAdmindashboardbyTimeQuery,
-  useGetAllQuizzesQuery,//====
-  useGetAllQuizzeQuery,//=====
+  useGetAllQuizzesQuery,
+  useGetAllQuizzeQuery,
   useGetUserQuizzesQuery,
   useSuspendQuizMutation,
   useUpdateQuizStatusMutation,
 } = adminApi;
 
-// ============================================================
-// Interfaces
-// ============================================================
 interface TopQuiz {
   quizId: string;
   quizTitle: string;

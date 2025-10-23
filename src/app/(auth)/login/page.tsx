@@ -10,8 +10,8 @@ import { FaUser, FaKey } from "react-icons/fa";
 import { HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
-import en from "@/app/(auth)/login/locales/en.json";
-import kh from "@/app/(auth)/login/locales/km.json";
+import en from "./locales/en.json";
+import kh from "./locales/km.json";
 import FormField from "@/components/auth/FormField";
 
 // -------------------- Zod Schema --------------------
@@ -39,12 +39,10 @@ const LoginForm = () => {
   const router = useRouter();
   const { update } = useSession();
 
-  // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // Handle form submit with optimized flow
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
@@ -54,7 +52,6 @@ const LoginForm = () => {
     try {
       loginSchema.parse(formData);
 
-      // Sign in without redirect
       const res = await signIn("credentials", {
         redirect: false,
         username: formData.username,
@@ -67,16 +64,10 @@ const LoginForm = () => {
         return;
       }
 
-      // Update session immediately to get fresh data
       await update();
-
-      // Small delay to ensure session is fully updated
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Navigate without full page reload
+      await new Promise((resolve) => setTimeout(resolve, 100));
       router.push("/dashboard");
-      router.refresh(); // Refresh server components data without full reload
-      
+      router.refresh();
       setIsLoading(false);
     } catch (err: any) {
       setIsLoading(false);
@@ -94,13 +85,9 @@ const LoginForm = () => {
     }
   };
 
-  // Handle OAuth login
   const handleOAuthLogin = async (provider: string) => {
     try {
-      await signIn(provider, { 
-        callbackUrl: "/dashboard",
-        redirect: true // OAuth needs redirect to complete flow
-      });
+      await signIn(provider, { callbackUrl: "/dashboard", redirect: true });
     } catch (error) {
       console.error(`Error signing in with ${provider}:`, error);
       setGeneralError(`Failed to sign in with ${provider}`);
@@ -108,38 +95,24 @@ const LoginForm = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen flex flex-col items-center justify-center p-4 ${fontClass}`}
-    >
+    <div className={`min-h-screen flex flex-col items-center justify-center p-4 ${fontClass}`}>
       <div className="flex flex-col md:flex-row w-full max-w-6xl rounded-3xl lg:border-8 border-white/70 transition-transform duration-500 shadow-2xl">
-        {/* Left Side  */}
+        {/* Left Side */}
         <div className="hidden md:flex flex-col items-center justify-center w-1/2 p-6 rounded-l-2xl bg-blue-100 relative overflow-hidden">
           <div className="absolute top-4 left-4 flex items-center space-x-2">
             <Link href="/" className="flex items-center space-x-2">
-              <Image
-                src="/logo-sq.png"
-                alt="Logo"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
+              <Image src="/logo-sq.png" alt="Logo" width={40} height={40} className="object-contain" />
               <span className="font-bold text-yellow-500 text-2xl">
                 <span className="text-blue-950">STACK</span>QUIZ
               </span>
             </Link>
           </div>
           <div className="mt-8">
-            <Image
-              src="/book.png"
-              alt="Login illustration"
-              width={400}
-              height={400}
-              className="object-contain"
-            />
+            <Image src="/book.png" alt="Login illustration" width={400} height={400} className="object-contain" />
           </div>
         </div>
 
-        {/* Right Side  */}
+        {/* Right Side */}
         <div className="flex-1 w-full md:w-1/2 p-4 md:p-6 bg-white rounded-2xl md:rounded-r-2xl md:rounded-l-none">
           <div className="flex justify-end mb-3">
             <button
@@ -211,50 +184,20 @@ const LoginForm = () => {
             <span className="text-gray-500 text-sm">{t.or}</span>
           </div>
           <div className="flex justify-center space-x-2">
-            <button
-              onClick={() => handleOAuthLogin("google")}
-              disabled={isLoading}
-              className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Image
-                src="/social_media_icon/google.svg"
-                alt="Google Icon"
-                width={40}
-                height={40}
-              />
+            <button onClick={() => handleOAuthLogin("google")} disabled={isLoading} className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
+              <Image src="/social_media_icon/google.svg" alt="Google Icon" width={40} height={40} />
             </button>
-            <button
-              onClick={() => handleOAuthLogin("github")}
-              disabled={isLoading}
-              className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Image
-                src="/social_media_icon/github.svg"
-                alt="GitHub Icon"
-                width={36}
-                height={36}
-              />
+            <button onClick={() => handleOAuthLogin("github")} disabled={isLoading} className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
+              <Image src="/social_media_icon/github.svg" alt="GitHub Icon" width={36} height={36} />
             </button>
-            <button
-              onClick={() => handleOAuthLogin("facebook")}
-              disabled={isLoading}
-              className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Image
-                src="/social_media_icon/fb.svg"
-                alt="Facebook Icon"
-                width={36}
-                height={36}
-              />
+            <button onClick={() => handleOAuthLogin("facebook")} disabled={isLoading} className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
+              <Image src="/social_media_icon/fb.svg" alt="Facebook Icon" width={36} height={36} />
             </button>
           </div>
 
           <p className="text-center text-gray-500 mt-3 text-sm">
             {t.noAccount}{" "}
-            <Link
-              href="/signup"
-              className="text-indigo-600 font-semibold hover:underline"
-            >
+            <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">
               {t.signup}
             </Link>
           </p>

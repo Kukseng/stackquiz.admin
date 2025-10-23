@@ -10,24 +10,45 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Define types
+type Quiz = {
+  id: string;
+  title: string;
+  description?: string;
+  difficulty?: string;
+  categories?: { id: string; name: string }[];
+  totalParticipants?: number;
+  averageRating?: number;
+  createdAt?: string | Date;
+  duration?: number;
+};
+
+type Category = { id: string; name: string };
+
 export default function ExplorePage() {
+  // Fetch quizzes and categories
   const { data: quizzes, isLoading } = useGetAllQuizzeQuery();
   const { data: categories } = useGetCategoriesQuery();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('popular');
 
-  // Filter quizzes based on search and category
-  const filteredQuizzes = quizzes?.filter(quiz => {
-    const matchesSearch = quiz.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         quiz.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || 
-                           quiz.categories?.some((cat: any) => cat.name === selectedCategory);
+  // Filter quizzes by search and category
+  const filteredQuizzes: Quiz[] = quizzes?.filter((quiz: Quiz) => {
+    const matchesSearch =
+      quiz.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      quiz.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory =
+      selectedCategory === 'all' ||
+      quiz.categories?.some(cat => cat.name === selectedCategory);
+
     return matchesSearch && matchesCategory;
-  });
+  }) || [];
 
   // Sort quizzes
-  const sortedQuizzes = filteredQuizzes?.sort((a, b) => {
+  const sortedQuizzes: Quiz[] = [...filteredQuizzes].sort((a, b) => {
     switch (sortBy) {
       case 'popular':
         return (b.totalParticipants || 0) - (a.totalParticipants || 0);
@@ -40,16 +61,13 @@ export default function ExplorePage() {
     }
   });
 
-  const getDifficultyColor = (difficulty: string) => {
+  // Helper functions
+  const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty?.toLowerCase()) {
-      case 'easy':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'hard':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'easy': return 'bg-green-100 text-green-800 border-green-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'hard': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -68,7 +86,7 @@ export default function ExplorePage() {
   return (
     <DashboardLayout currentPage="explore">
       <div className="space-y-8">
-        {/* Header Section */}
+        {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -81,8 +99,8 @@ export default function ExplorePage() {
               Discover and challenge yourself with amazing quizzes from our community
             </p>
           </div>
-          
-          {/* Search Bar */}
+
+          {/* Search */}
           <div className="relative w-full lg:w-80">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -111,7 +129,7 @@ export default function ExplorePage() {
               </select>
             </div>
           </div>
-          
+
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <Button
               variant={selectedCategory === 'all' ? 'default' : 'outline'}
@@ -123,7 +141,7 @@ export default function ExplorePage() {
               <TrendingUp className="h-4 w-4 mr-2" />
               All Quizzes
             </Button>
-            {categories?.map((cat: any) => (
+            {categories?.map((cat: Category) => (
               <Button
                 key={cat.id}
                 variant={selectedCategory === cat.name ? 'default' : 'outline'}
@@ -158,15 +176,13 @@ export default function ExplorePage() {
           </div>
         ) : (
           <>
-            {/* Results Count */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Showing {sortedQuizzes?.length || 0} of {quizzes?.length || 0} quizzes
+                Showing {sortedQuizzes.length} of {quizzes?.length || 0} quizzes
               </p>
             </div>
 
-            {/* Quizzes Grid */}
-            {sortedQuizzes?.length === 0 ? (
+            {sortedQuizzes.length === 0 ? (
               <div className="text-center py-16 space-y-4">
                 <div className="w-24 h-24 mx-auto bg-muted rounded-full flex items-center justify-center">
                   <Search className="h-10 w-10 text-muted-foreground" />
@@ -189,7 +205,7 @@ export default function ExplorePage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {sortedQuizzes?.map((quiz: any, index: number) => (
+                {sortedQuizzes.map((quiz: Quiz, index: number) => (
                   <Card 
                     key={quiz.id} 
                     className="group cursor-pointer border border-border/50 hover:border-border hover:shadow-lg transition-all duration-300 overflow-hidden"
@@ -206,7 +222,7 @@ export default function ExplorePage() {
                       </div>
                       <div className="absolute bottom-3 left-3 right-3">
                         <div className="flex flex-wrap gap-1">
-                          {quiz.categories?.slice(0, 2).map((cat: any) => (
+                          {quiz.categories?.slice(0, 2).map(cat => (
                             <Badge 
                               key={cat.id} 
                               variant="secondary" 
@@ -218,7 +234,7 @@ export default function ExplorePage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <CardHeader className="p-4 pb-2">
                       <CardTitle className="text-lg font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors">
                         {quiz.title}
@@ -227,7 +243,7 @@ export default function ExplorePage() {
                         {quiz.description || 'Test your knowledge with this engaging quiz'}
                       </CardDescription>
                     </CardHeader>
-                    
+
                     <CardContent className="p-4 pt-0">
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
