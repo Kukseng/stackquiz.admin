@@ -9,30 +9,13 @@ We focus on **reliability, simplicity, and flexibility** so you can focus on lea
   <img src="./public/logo-sq.png" alt="StackQuiz Logo" width="200"/>
 </p>
 
-
 ---
+
+
 
 ## ✨ Key Features
 
 **StackQuiz empowers users with 3 main operational modes:**
-
-### 👨‍🏫 Organizer Mode (Authenticated Users)
-- 📝 **Create & Manage Quizzes** – Multiple formats: MCQ, True/False, polls, fill-in-the-blank, and text input, with timers, points, and difficulty levels
-- ✏️ **Edit, Duplicate, Delete Quizzes** – Full control over your content
-- 🎮 **Host Live Sessions** – Generate room codes, control pace, skip or pause questions
-- 📊 **Analytics Dashboard** – See participant scores, most-missed questions, and overall performance
-- 🤝 **Collaboration Tools** – Invite co-organizers, manage shared quiz libraries, and run team competitions
-- 🌐 **Publish to Explore** – Share quizzes publicly for others to discover
-- 🔗 **Multi-Access Options** – Unique room codes, links, and QR codes provided for every session
-- ⚙️ **Flexible Settings** – Randomize questions, enable team mode, control scoring rules
-
-### 👥 Guest Mode (Participants without Login)
-- 🚀 **Instant Access** – Join quizzes instantly with a room code, no account required
-- 🎭 **Smart Nickname System** – Pick your own display name or use our random generator with inappropriate-name filtering
-- ⏱️ **Real-Time Engagement** – See questions in real time with countdown timers and progress bars
-- 🏆 **Live Feedback & Rankings** – Get instant answer feedback, view leaderboards, and track your final score
-- 🔄 **Second Chances** – In case of ties, players can retry missed or incorrect questions
-
 ### 🔐 Admin Mode (Full Platform Control)
 - 🌍 **System-Wide Management** – Access all data, settings, and configurations
 - 👤 **User Administration** – View, edit, ban, suspend, or reset passwords for any account
@@ -42,8 +25,6 @@ We focus on **reliability, simplicity, and flexibility** so you can focus on lea
 - ✅ **Quality Control** – Approve only high-quality content for public Explore section
 
 ---
-
-## 🚀 Live Platform
 
 Access our production-ready platform:
 
@@ -99,19 +80,11 @@ STACKQUIZ leverages cutting-edge technologies for optimal performance, security,
 #### **🏢 Core Framework**
 - **☕ Spring Boot** - Enterprise-grade Java framework for scalable web applications and REST APIs
 - **🔐 Keycloak** - Open-source identity and access management for secure authentication
-- **🔌 WebSocket** - Real-time bidirectional communication for live quiz sessions
 
 ### 💾 Database & Caching
 
 #### **🗄️ Primary Database**
 - **🐘 PostgreSQL** - Advanced relational database with ACID compliance and high performance
-
-#### **⚡ Caching Layer**
-- **🔴 Redis** - In-memory data store for:
-  - 💾 Session management
-  - 🏃‍♂️ Real-time quiz data caching
-  - 🏆 Leaderboard storage
-  - 🔗 WebSocket connection management
 
 ### 🐳 DevOps & Deployment
 
@@ -128,49 +101,53 @@ STACKQUIZ leverages cutting-edge technologies for optimal performance, security,
 - **🔄 CI/CD Pipeline** - Automated testing, building, and deployment
 
 ---
-
-## 🗺️ Navigation Structure
-
-### 🌐 Public Pages
-
-• 🏠 **Overview:** Platform overview and introduction  
-• 🔍 **User:** [https://app.stackquiz.me/explore](https://app.stackquiz.me/explore) - Discover public quizzes  
-• 🎮 **Analytics:** [https://app.stackquiz.me/join-room](https://app.stackquiz.me/join-room) - Join active quiz sessions  
-• ℹ️ **About Us:** [https://app.stackquiz.me/about](https://app.stackquiz.me/about) - Learn about our mission  
-• 🔑 **Login:** [https://app.stackquiz.me/login](https://app.stackquiz.me/login) - User authentication  
-• 📝 **Register:** [https://app.stackquiz.me/signup](https://app.stackquiz.me/signup) - Create new account  
-
 ### 🔐 Authenticated User Pages
 
 
   ○ 📊 **Main Dashboard:** [https://app.stackquiz.me/dashboard](https://app.stackquiz.me/dashboard) - Overview and quick actions  
   ○ ⚙️ **Profile Settings:** Update user information and configure preferences  
 
-### 🛡️ Admin Panel Structure
+🛡️ Admin Panel Structure
 
-• 🔐 **Admin Dashboard:** System-wide management and analytics  
-  ○ 👥 **User Management:** [https://app.stackquiz.me/admin/users](https://app.stackquiz.me/admin/users) - Manage user accounts  
-  ○ 🛡️ **Content Moderation:** [https://app.stackquiz.me/admin/content](https://app.stackquiz.me/admin/content) - Quiz approval and moderation  
-  ○ 📊 **System Analytics:** [https://app.stackquiz.me/admin/analytics](https://app.stackquiz.me/admin/analytics) - Platform performance metrics  
+• 🔐 Admin Dashboard: System-wide management and analytics
+○ 👥 User Management: https://app.stackquiz.me/admn/users
+ - View, edit, or delete users
+○ 🛡️ Content Moderation: https://app.stackquiz.me/admin/content
+ - Approve, suspend, or review quizzes
+○ 📊 System Analytics: https://app.stackquiz.me/admin/analytics
+ - Track user activity, sessions, and quiz performance
 
-• 🛠️ **System Configuration:**  
-  ○ ⚙️ **Platform Settings:** [https://app.stackquiz.me/admin/settings](https://app.stackquiz.me/admin/settings) - System preferences  
-  ○ 🔒 **Security Management:** [https://app.stackquiz.me/admin/security](https://app.stackquiz.me/admin/security) - Security monitoring  
+• 🧾 Reports & Feedback:
+○ 📘 Quiz Reports: https://app.stackquiz.me/admin/reports/quizzes
+ - Detailed quiz performance reports
+○ 💬 Feedback Management: https://app.stackquiz.me/admin/feedback
+ - Review feedback on quizzes
 
-### 📝 Quiz Management
+• 🏷️ Categories Management:
+○ 📚 Manage Categories: https://app.stackquiz.me/admin/categories
+ - Create, edit, or view quiz categories
 
-• 👨‍🏫 **Organizer Tools:** Create and manage quiz content  
-  ○ 📚 **My Quizzes:** [https://app.stackquiz.me/organizer/quizzes](https://app.stackquiz.me/organizer/quizzes) - Quiz library management  
-  ○ ➕ **Create Quiz:** [https://app.stackquiz.me/organizer/create](https://app.stackquiz.me/organizer/create) - Build new quizzes  
-  ○ 🎮 **Live Sessions:** [https://app.stackquiz.me/organizer/sessions](https://app.stackquiz.me/organizer/sessions) - Host active sessions  
-  ○ 📈 **Quiz Analytics:** [https://app.stackquiz.me/organizer/analytics](https://app.stackquiz.me/organizer/analytics) - Performance insights  
+• 🧠 Quiz Management:
+○ 🧩 All Quizzes: https://app.stackquiz.me/admin/quizzes
+ - Manage all active and inactive quizzes
+○ 🚫 Suspend Quiz: https://app.stackquiz.me/admin/quizzes/suspend
+ - Temporarily disable inappropriate quizzes
+○ 🔄 Update Quiz Status: https://app.stackquiz.me/admin/quizzes/status
+ - Change quiz visibility or approval status
 
-• 🎯 **Player Experience:**  
-  ○ 🚪 **Join Quiz:** [https://app.stackquiz.me/play/join](https://app.stackquiz.me/play/join) - Enter room codes  
-  ○ 🌐 **Browse Quizzes:** [https://app.stackquiz.me/explore](https://app.stackquiz.me/explore) - Discover public content  
-  ○ 🏆 **My Results:** [https://app.stackquiz.me/play/results](https://app.stackquiz.me/play/results) - Performance history  
+• 🕹️ Session Management:
+○ 🎯 My Sessions: https://app.stackquiz.me/admin/sessions
+ - Track sessions you created
 
----
+• 🖼️ Media Uploads:
+○ 📤 Upload Media: https://app.stackquiz.me/admin/media
+ - Upload images, videos, or files for quizzes
+
+• 🛠️ System Configuration:
+○ ⚙️ Platform Settings: https://app.stackquiz.me/admin/settings
+ - Configure system preferences
+○ 🔒 Security Management: https://app.stackquiz.me/admin/security
+ - Monitor and manage security policies
 
 
 ## 🙏 Acknowledgments
@@ -192,8 +169,3 @@ Their invaluable guidance, patience, and unwavering support have been instrument
 *Empowering education through innovative, interactive, and accessible quiz experiences.*
 
 ---
-
-<p align="center">
-  <strong>🚀 Ready to transform your learning experience?</strong><br/>
-  <a href="https://app.stackquiz.me/">🌐 Visit STACKQUIZ Today!</a>
-</p>

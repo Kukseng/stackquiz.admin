@@ -63,7 +63,6 @@ export const baseApi = createApi({
     "Analytics",
     "AnalyticsGraph",
     "Quizzes",
-    // "Users"
   ],
   endpoints: () => ({}),
 });

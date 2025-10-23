@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import StoreProvider from "@/providers/StoreProvider";
 import OfflineIndicator from "@/components/OfflineIndicator";
 
@@ -10,8 +9,6 @@ interface LayoutWrapperProps {
 }
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
-  const pathname = usePathname();
-
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {

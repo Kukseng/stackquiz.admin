@@ -16,6 +16,7 @@ export default function UsersPage() {
         await deleteUser(userId).unwrap();
         alert('User deleted successfully');
       } catch (error) {
+        console.error('Error deleting user:', error);
         alert('Failed to delete user');
       }
     }
@@ -34,9 +35,6 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            Add User
-          </button>
         </div>
 
         {isLoading ? (

@@ -1,14 +1,11 @@
+import AnalyticsComponent from '@/components/anlytics/analytics'
+import { DashboardLayout } from '@/components/DashboardLayout'
+import React from 'react'
 
-"use client";
-
-import React from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
-import Analytics from '../analytics/page';
-
-export default function DashboardPage() {
+export default function Analytics() {
   return (
-    <DashboardLayout currentPage="overview">
-      <Analytics/>
+    <DashboardLayout currentPage="analytics">
+      <AnalyticsComponent/>
     </DashboardLayout>
-  );
+  )
 }
