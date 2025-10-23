@@ -72,7 +72,7 @@ interface DashboardStats {
   topQuizzes?: QuizStats[]
 }
 
-export default function Analytics() {
+export default function AnalyticsComponent() {
   const [timeRange, setTimeRange] = useState<TimeRange>("all")
   const { theme } = useTheme()
 
@@ -283,7 +283,6 @@ export default function Analytics() {
   const { labels, sessionsData, participantsData } = generateChartData()
 
   return (
-    <div className="min-h-screen">
       <div className="mx-auto p-6 space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -486,94 +485,6 @@ export default function Analytics() {
             </div>
           </div>
         </div>
-
-        {/* Additional Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg Participants/Session</h3>
-            <p className="text-2xl font-bold text-foreground">{stats.averageParticipantsPerSession.toFixed(2)}</p>
-          </div>
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg Session Duration</h3>
-            <p className="text-2xl font-bold text-foreground">{stats.averageSessionDuration.toFixed(1)} min</p>
-          </div>
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Overall Accuracy</h3>
-            <p className="text-2xl font-bold text-foreground">{stats.overallAccuracyRate.toFixed(1)}%</p>
-          </div>
-        </div>
-
-        {/* Top Quizzes */}
-        {stats.topQuizzes && stats.topQuizzes.length > 0 && (
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Top Quizzes</h3>
-            <div className="space-y-3">
-              {stats.topQuizzes.slice(0, 5).map((quiz, index) => (
-                <div key={quiz.quizId} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{quiz.quizTitle}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {quiz.timesPlayed} plays • {quiz.totalParticipants} participants
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">{quiz.averageAccuracy.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">accuracy</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Additional Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Most Active Host</h3>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-xl font-bold text-foreground">{stats.mostActiveHost}</p>
-                <p className="text-sm text-muted-foreground">Top contributor</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">Last Session Created</p>
-                <p className="text-sm font-medium text-foreground">
-                  {new Date(stats.lastSessionCreated).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">Last Session Completed</p>
-                <p className="text-sm font-medium text-foreground">
-                  {new Date(stats.lastSessionCompleted).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
   )
 }

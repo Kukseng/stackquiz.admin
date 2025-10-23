@@ -3,12 +3,12 @@
 
 import React from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import Analytics from './analytics/page';
+import OverviewComponent from '@/components/overview/overview';
 
 export default function DashboardPage() {
-  return (
-    <DashboardLayout currentPage="overview">
-      <Analytics/>
-    </DashboardLayout>
-  );
+  return(
+       <DashboardLayout currentPage="dashboard">
+        <OverviewComponent/>
+      </DashboardLayout>
+  )
 }

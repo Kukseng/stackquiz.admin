@@ -231,10 +231,6 @@ export default function ExplorePage() {
                     <CardContent className="p-4 pt-0">
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                          <span>{quiz.averageRating?.toFixed(1) || '4.5'}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
                           <Users className="h-4 w-4 text-blue-500" />
                           <span>{quiz.totalParticipants?.toLocaleString() || '0'}</span>
                         </div>
@@ -244,12 +240,6 @@ export default function ExplorePage() {
                         </div>
                       </div>
                     </CardContent>
-                    
-                    <CardFooter className="p-4 pt-0">
-                      <Button className="w-full group-hover:bg-blue-600 group-hover:shadow-md transition-all duration-300">
-                        Start Quiz
-                      </Button>
-                    </CardFooter>
                   </Card>
                 ))}
               </div>
