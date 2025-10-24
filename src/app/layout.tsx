@@ -2,10 +2,10 @@
 import { Inter } from "next/font/google";
 import { useState, useEffect, ReactNode } from "react";
 import "./globals.css";
-import { Toaster } from 'react-hot-toast';
 import { Providers } from "@/components/providers/Providers";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,7 +38,7 @@ export default function RootLayout({
         <LanguageProvider>
           {!isOnline && <OfflineIndicator />}
           <Providers>{children}</Providers>
-          <Toaster position="top-right" reverseOrder={false} />
+          <Toaster position="top-right" />
         </LanguageProvider>
       </body>
     </html>

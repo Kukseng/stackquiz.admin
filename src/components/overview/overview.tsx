@@ -14,7 +14,7 @@ import {
   Legend,
   Filler,
 } from "chart.js"
-import { ChevronDown, TrendingUp, Users, Award, Activity } from "lucide-react"
+import { ChevronDown, TrendingUp, Users, Award, Activity, ArrowUp, ArrowDown, Clock, Target } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useGetAdminDashboardQuery, useGetAdmindashboardbyTimeQuery } from "@/services/adminApi"
 
@@ -118,7 +118,6 @@ export default function OverviewComponent() {
       }
     }
 
-    // If API provides timeSeriesData, use it
     if (stats.timeSeriesData && stats.timeSeriesData.length > 0) {
       const labels = stats.timeSeriesData.map((item: TimeSeriesData) => {
         const date = new Date(item.date)
@@ -142,11 +141,9 @@ export default function OverviewComponent() {
       return { labels, sessionsData, participantsData }
     }
 
-    // Fallback: Generate realistic data based on time range
     return generateFallbackData()
   }
 
-  // Generate fallback data when no timeSeriesData is available
   const generateFallbackData = () => {
     const totalSessions = getFilteredSessions()
     const totalParticipants = getFilteredParticipants()
@@ -181,19 +178,16 @@ export default function OverviewComponent() {
     return { labels, sessionsData, participantsData }
   }
 
-  // Generate data that shows realistic growth with some variation
   const generateRealisticData = (total: number, points: number): number[] => {
     const data = []
     let accumulated = 0
     
     for (let i = 0; i < points; i++) {
-      // More weight towards the middle points for realistic distribution
       const progress = (i + 1) / points
-      const weight = Math.sin(progress * Math.PI) // Sine curve for natural distribution
+      const weight = Math.sin(progress * Math.PI)
       const increment = Math.floor((total * weight * 0.8) / (points / 2))
       
       accumulated += increment
-      // Ensure we don't exceed total and last point equals total
       const value = i === points - 1 ? total : Math.min(accumulated, total * 0.95)
       data.push(value)
     }
@@ -201,7 +195,6 @@ export default function OverviewComponent() {
     return data
   }
 
-  // Generate data that shows progressive growth
   const generateProgressiveData = (total: number, points: number): number[] => {
     const data = []
     for (let i = 0; i < points; i++) {
@@ -209,12 +202,10 @@ export default function OverviewComponent() {
       const value = Math.floor(total * progress)
       data.push(value)
     }
-    // Ensure last point equals total
     data[points - 1] = total
     return data
   }
 
-  // Get filtered counts for display
   const getFilteredSessions = (): number => {
     if (!stats) return 0
     switch (timeRange) {
@@ -249,10 +240,10 @@ export default function OverviewComponent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground font-medium">Loading analytics...</p>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard analytics...</p>
         </div>
       </div>
     )
@@ -260,11 +251,11 @@ export default function OverviewComponent() {
 
   if (!stats || error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center bg-card rounded-xl shadow-lg p-8 max-w-md border">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md border border-gray-100">
           <div className="text-6xl mb-4">📊</div>
-          <h2 className="text-2xl font-bold mb-2">No Data Available</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Data Available</h2>
+          <p className="text-gray-600">
             {error ? "Failed to load analytics data" : "Unable to load analytics data. Please try again later."}
           </p>
         </div>
@@ -273,76 +264,117 @@ export default function OverviewComponent() {
   }
 
   const isDark = theme === "dark"
-  const primaryColor = isDark ? "rgb(96, 165, 250)" : "rgb(59, 130, 246)"
-  const secondaryColor = isDark ? "rgb(167, 139, 250)" : "rgb(139, 92, 246)"
-  const accentColor = isDark ? "rgb(34, 211, 238)" : "rgb(6, 182, 212)"
-  const gridColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"
-  const textColor = isDark ? "rgb(226, 232, 240)" : "rgb(51, 65, 85)"
-
   const completionRate = stats.totalSessions > 0 ? (stats.completedSessions / stats.totalSessions) * 100 : 0
   const { labels, sessionsData, participantsData } = generateChartData()
 
+  const statCards = [
+    {
+      title: "Total Quizzes",
+      value: stats.totalQuizzes,
+      subtitle: `${stats.totalQuestions} questions`,
+      icon: Award,
+      color: "blue",
+      bgColor: "bg-blue-50",
+      iconColor: "text-blue-600",
+      trend: "+12%",
+      trendUp: true,
+    },
+    {
+      title: "Total Sessions",
+      value: getFilteredSessions(),
+      subtitle: `${stats.activeSessions} active now`,
+      icon: Activity,
+      color: "green",
+      bgColor: "bg-green-50",
+      iconColor: "text-green-600",
+      trend: "+8%",
+      trendUp: true,
+    },
+    {
+      title: "Total Participants",
+      value: getFilteredParticipants(),
+      subtitle: `${stats.totalUniqueParticipants} unique`,
+      icon: Users,
+      color: "purple",
+      bgColor: "bg-purple-50",
+      iconColor: "text-purple-600",
+      trend: "+15%",
+      trendUp: true,
+    },
+    {
+      title: "Completion Rate",
+      value: `${completionRate.toFixed(1)}%`,
+      subtitle: `${stats.completedSessions} completed`,
+      icon: Target,
+      color: "orange",
+      bgColor: "bg-orange-50",
+      iconColor: "text-orange-600",
+      trend: "-2%",
+      trendUp: false,
+    },
+  ]
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <div className="mx-auto p-6 space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Quizzes</p>
-              <Award className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-3xl font-bold text-foreground">{stats.totalQuizzes}</p>
-            <p className="text-xs text-muted-foreground mt-2">{stats.totalQuestions} total questions</p>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p className="text-gray-600 mt-1">Track your quiz platform performance</p>
           </div>
-          <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Sessions</p>
-              <Activity className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-3xl font-bold text-foreground">{getFilteredSessions()}</p>
-            <p className="text-xs text-muted-foreground mt-2">{stats.activeSessions} currently active</p>
-          </div>
-          <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Total Participants</p>
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-3xl font-bold text-foreground">{getFilteredParticipants()}</p>
-            <p className="text-xs text-muted-foreground mt-2">{stats.totalUniqueParticipants} unique participants</p>
-          </div>
-          <div className="bg-card rounded-lg border p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-muted-foreground">Completion Rate</p>
-              <TrendingUp className="w-5 h-5 text-primary" />
-            </div>
-            <p className="text-3xl font-bold text-foreground">{completionRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground mt-2">{stats.completedSessions} completed sessions</p>
+          <div className="relative">
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="appearance-none bg-white text-gray-700 text-sm font-medium rounded-lg px-4 py-2.5 pr-10 border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer shadow-sm"
+            >
+              {timeRangeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
           </div>
         </div>
 
-        {/* Charts */}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statCards.map((card, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-1"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`${card.bgColor} p-3 rounded-lg`}>
+                  <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                </div>
+                <div className={`flex items-center gap-1 text-xs font-semibold ${
+                  card.trendUp ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {card.trendUp ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                  {card.trend}
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 font-medium mb-1">{card.title}</p>
+              <p className="text-3xl font-bold text-gray-900 mb-1">{card.value}</p>
+              <p className="text-xs text-gray-500">{card.subtitle}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Sessions Overview Chart */}
-          <div className="bg-card rounded-lg border p-6">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-foreground">Sessions Overview</h3>
-              <div className="relative">
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                  className="appearance-none bg-muted text-foreground text-sm rounded-lg px-4 py-2 pr-10 border-0 focus:ring-2 focus:ring-primary cursor-pointer"
-                >
-                  {timeRangeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Activity Trends</h3>
+                <p className="text-sm text-gray-500 mt-1">Sessions and participants over time</p>
               </div>
             </div>
-            <div className="h-64">
+            <div className="h-72">
               {labels.length > 0 ? (
                 <Line
                   data={{
@@ -351,72 +383,92 @@ export default function OverviewComponent() {
                       {
                         label: "Sessions",
                         data: sessionsData,
-                        borderColor: primaryColor,
-                        backgroundColor: isDark ? "rgba(96, 165, 250, 0.1)" : "rgba(59, 130, 246, 0.1)",
+                        borderColor: "rgb(59, 130, 246)",
+                        backgroundColor: "rgba(59, 130, 246, 0.1)",
                         tension: 0.4,
                         fill: true,
-                        borderWidth: 2,
+                        borderWidth: 3,
                         pointRadius: 0,
-                        pointHoverRadius: 4,
-                        pointBackgroundColor: primaryColor,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: "rgb(59, 130, 246)",
                         pointBorderColor: "#fff",
                         pointBorderWidth: 2,
+                        pointHoverBorderWidth: 3,
                       },
                       {
                         label: "Participants",
                         data: participantsData,
-                        borderColor: secondaryColor,
-                        backgroundColor: isDark ? "rgba(167, 139, 250, 0.1)" : "rgba(139, 92, 246, 0.1)",
+                        borderColor: "rgb(139, 92, 246)",
+                        backgroundColor: "rgba(139, 92, 246, 0.1)",
                         tension: 0.4,
                         fill: true,
-                        borderWidth: 2,
+                        borderWidth: 3,
                         pointRadius: 0,
-                        pointHoverRadius: 4,
-                        pointBackgroundColor: secondaryColor,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: "rgb(139, 92, 246)",
                         pointBorderColor: "#fff",
                         pointBorderWidth: 2,
+                        pointHoverBorderWidth: 3,
                       },
                     ],
                   }}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                      mode: 'index',
+                      intersect: false,
+                    },
                     plugins: {
                       legend: {
                         display: true,
-                        position: "bottom",
+                        position: "top",
+                        align: "end",
                         labels: {
                           usePointStyle: true,
                           pointStyle: "circle",
-                          padding: 15,
-                          color: textColor,
-                          font: { size: 12 },
+                          padding: 20,
+                          color: "rgb(75, 85, 99)",
+                          font: { size: 12, weight: "500" },
                         },
                       },
                       tooltip: {
-                        backgroundColor: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(0, 0, 0, 0.8)",
+                        backgroundColor: "rgba(0, 0, 0, 0.8)",
                         padding: 12,
                         cornerRadius: 8,
-                        titleFont: { size: 13 },
+                        titleFont: { size: 13, weight: "600" },
                         bodyFont: { size: 12 },
+                        displayColors: true,
+                        usePointStyle: true,
                       },
                     },
                     scales: {
                       x: {
                         grid: { display: false },
-                        ticks: { color: textColor, font: { size: 11 } },
+                        ticks: { 
+                          color: "rgb(107, 114, 128)", 
+                          font: { size: 11 },
+                          padding: 8,
+                        },
                         border: { display: false },
                       },
                       y: {
-                        grid: { color: gridColor },
-                        ticks: { color: textColor, font: { size: 11 } },
+                        grid: { 
+                          color: "rgba(0, 0, 0, 0.05)",
+                          drawTicks: false,
+                        },
+                        ticks: { 
+                          color: "rgb(107, 114, 128)", 
+                          font: { size: 11 },
+                          padding: 8,
+                        },
                         border: { display: false },
                       },
                     },
                   }}
                 />
               ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
+                <div className="h-full flex items-center justify-center text-gray-500">
                   No data available for selected period
                 </div>
               )}
@@ -424,25 +476,14 @@ export default function OverviewComponent() {
           </div>
 
           {/* Session Status Chart */}
-          <div className="bg-card rounded-lg border p-6">
+          <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-foreground">Session Status</h3>
-              <div className="relative">
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-                  className="appearance-none bg-muted text-foreground text-sm rounded-lg px-4 py-2 pr-10 border-0 focus:ring-2 focus:ring-primary cursor-pointer"
-                >
-                  {timeRangeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Session Status</h3>
+                <p className="text-sm text-gray-500 mt-1">Current session distribution</p>
               </div>
             </div>
-            <div className="h-64">
+            <div className="h-72">
               <Bar
                 data={{
                   labels: ["Active", "Completed", "Scheduled"],
@@ -450,8 +491,12 @@ export default function OverviewComponent() {
                     {
                       label: "Sessions",
                       data: [stats.activeSessions, stats.completedSessions, stats.scheduledSessions],
-                      backgroundColor: [primaryColor, secondaryColor, accentColor],
-                      borderRadius: 6,
+                      backgroundColor: [
+                        "rgb(34, 197, 94)",
+                        "rgb(59, 130, 246)",
+                        "rgb(251, 146, 60)",
+                      ],
+                      borderRadius: 8,
                       borderSkipped: false,
                     },
                   ],
@@ -460,24 +505,35 @@ export default function OverviewComponent() {
                   responsive: true,
                   maintainAspectRatio: false,
                   plugins: {
-                    legend: {
-                      display: false,
-                    },
+                    legend: { display: false },
                     tooltip: {
-                      backgroundColor: isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(0, 0, 0, 0.8)",
+                      backgroundColor: "rgba(0, 0, 0, 0.8)",
                       padding: 12,
                       cornerRadius: 8,
+                      titleFont: { size: 13, weight: "600" },
+                      bodyFont: { size: 12 },
                     },
                   },
                   scales: {
                     x: {
                       grid: { display: false },
-                      ticks: { color: textColor, font: { size: 11 } },
+                      ticks: { 
+                        color: "rgb(107, 114, 128)", 
+                        font: { size: 11, weight: "500" },
+                        padding: 8,
+                      },
                       border: { display: false },
                     },
                     y: {
-                      grid: { color: gridColor },
-                      ticks: { color: textColor, font: { size: 11 } },
+                      grid: { 
+                        color: "rgba(0, 0, 0, 0.05)",
+                        drawTicks: false,
+                      },
+                      ticks: { 
+                        color: "rgb(107, 114, 128)", 
+                        font: { size: 11 },
+                        padding: 8,
+                      },
                       border: { display: false },
                     },
                   },
@@ -487,88 +543,115 @@ export default function OverviewComponent() {
           </div>
         </div>
 
-        {/* Additional Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg Participants/Session</h3>
-            <p className="text-2xl font-bold text-foreground">{stats.averageParticipantsPerSession.toFixed(2)}</p>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-blue-600 p-2 rounded-lg">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-blue-900">Avg Participants</h3>
+            </div>
+            <p className="text-3xl font-bold text-blue-900">{stats.averageParticipantsPerSession.toFixed(1)}</p>
+            <p className="text-sm text-blue-700 mt-1">per session</p>
           </div>
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg Session Duration</h3>
-            <p className="text-2xl font-bold text-foreground">{stats.averageSessionDuration.toFixed(1)} min</p>
+
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-purple-600 p-2 rounded-lg">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-purple-900">Avg Duration</h3>
+            </div>
+            <p className="text-3xl font-bold text-purple-900">{stats.averageSessionDuration.toFixed(1)}</p>
+            <p className="text-sm text-purple-700 mt-1">minutes</p>
           </div>
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Overall Accuracy</h3>
-            <p className="text-2xl font-bold text-foreground">{stats.overallAccuracyRate.toFixed(1)}%</p>
+
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-green-600 p-2 rounded-lg">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-green-900">Overall Accuracy</h3>
+            </div>
+            <p className="text-3xl font-bold text-green-900">{stats.overallAccuracyRate.toFixed(1)}%</p>
+            <p className="text-sm text-green-700 mt-1">success rate</p>
           </div>
         </div>
 
-        {/* Top Quizzes */}
-        {stats.topQuizzes && stats.topQuizzes.length > 0 && (
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Top Quizzes</h3>
-            <div className="space-y-3">
-              {stats.topQuizzes.slice(0, 5).map((quiz, index) => (
-                <div key={quiz.quizId} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
-                      {index + 1}
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Quizzes */}
+          {stats.topQuizzes && stats.topQuizzes.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Quizzes</h3>
+              <div className="space-y-4">
+                {stats.topQuizzes.slice(0, 5).map((quiz, index) => (
+                  <div key={quiz.quizId} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-sm shadow-md">
+                      #{index + 1}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{quiz.quizTitle}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{quiz.quizTitle}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
                         {quiz.timesPlayed} plays • {quiz.totalParticipants} participants
                       </p>
                     </div>
+                    <div className="text-right">
+                      <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 rounded-full">
+                        <span className="text-sm font-bold text-green-700">{quiz.averageAccuracy.toFixed(1)}%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-foreground">{quiz.averageAccuracy.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">accuracy</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Additional Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Most Active Host</h3>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="w-6 h-6 text-primary" />
+          {/* Recent Activity */}
+          <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Summary</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">Most Active Host</p>
+                  <p className="text-lg font-bold text-blue-600 mt-0.5">{stats.mostActiveHost}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xl font-bold text-foreground">{stats.mostActiveHost}</p>
-                <p className="text-sm text-muted-foreground">Top contributor</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-lg border p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">Last Session Created</p>
-                <p className="text-sm font-medium text-foreground">
-                  {new Date(stats.lastSessionCreated).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">Last Session Completed</p>
-                <p className="text-sm font-medium text-foreground">
-                  {new Date(stats.lastSessionCompleted).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-gray-700 font-medium">Last Session Created</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {new Date(stats.lastSessionCreated).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm text-gray-700 font-medium">Last Session Completed</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">
+                    {new Date(stats.lastSessionCompleted).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
