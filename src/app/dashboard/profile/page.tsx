@@ -234,9 +234,6 @@ export default function ProfilePage() {
               </h2>
               <p className="text-gray-600 mt-1">{formData.email || 'user@stackquiz.com'}</p>
               <p className="text-sm text-gray-500 mt-2">@{formData.username || 'username'}</p>
-              <p className="text-xs text-gray-400 mt-3">
-                Click on avatar to change photo (Max 5MB, JPEG/PNG/GIF/WebP)
-              </p>
               {user?.createdAt && (
                 <p className="text-xs text-gray-400 mt-1">
                   Member since {new Date(user.createdAt).toLocaleDateString()}
