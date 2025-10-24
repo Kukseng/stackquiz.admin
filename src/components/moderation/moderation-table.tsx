@@ -117,7 +117,7 @@ export function ModerationTable() {
   }
 
   return (
-    <>
+    <div className="space-y-6 p-6">
       <div className="rounded-lg border border-border bg-card">
         <div className="flex items-center justify-between border-b border-border p-4">
           <div className="relative w-80">
@@ -209,6 +209,6 @@ export function ModerationTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

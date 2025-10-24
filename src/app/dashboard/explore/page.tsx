@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useGetAllQuizzeQuery, useGetCategoriesQuery } from '@/services/adminApi';
-import { Search, Users, Clock, Filter, TrendingUp, Sparkles } from 'lucide-react';
+import { Search, Users, Clock, Filter} from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import Image from 'next/image';
+import { unknown } from 'zod';
 
 export default function ExplorePage() {
   const { data: quizzes, isLoading } = useGetAllQuizzeQuery();
@@ -68,22 +70,10 @@ export default function ExplorePage() {
   return (
     <DashboardLayout currentPage="explore">
       <div className="space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-blue-600" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Explore Quizzes
-              </h1>
-            </div>
-            <p className="text-lg text-muted-foreground">
-              Discover and challenge yourself with amazing quizzes from our community
-            </p>
-          </div>
-          
-          {/* Search Bar */}
-          <div className="relative w-full lg:w-80">
+        {/* Categories Filter */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="relative w-full lg:w-80">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search quizzes..."
@@ -91,14 +81,9 @@ export default function ExplorePage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
-        </div>
-
-        {/* Categories Filter */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Categories</h2>
-            <div className="flex items-center gap-2">
+            </div>
+          <div className='grid grid-cols-2 gap-1.5'>
+             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <select 
                 value={sortBy}
@@ -110,31 +95,23 @@ export default function ExplorePage() {
                 <option value="newest">Newest</option>
               </select>
             </div>
-          </div>
-          
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              className={`whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === 'all' ? 'shadow-md' : ''
-              }`}
-              onClick={() => setSelectedCategory('all')}
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              All Quizzes
-            </Button>
-            {categories?.map((cat: any) => (
-              <Button
-                key={cat.id}
-                variant={selectedCategory === cat.name ? 'default' : 'outline'}
-                className={`whitespace-nowrap transition-all duration-200 ${
-                  selectedCategory === cat.name ? 'shadow-md' : ''
-                }`}
-                onClick={() => setSelectedCategory(cat.name)}
+            <div className="flex items-center gap-2">
+              <select
+                id="category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {cat.name}
-              </Button>
-            ))}
+                <option value="all">All Quizzes</option>
+                {categories?.map((cat:any) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+           
           </div>
         </div>
 
@@ -189,58 +166,73 @@ export default function ExplorePage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {sortedQuizzes?.map((quiz: any, index: number) => (
-                  <Card 
-                    key={quiz.id} 
-                    className="group cursor-pointer border border-border/50 hover:border-border hover:shadow-lg transition-all duration-300 overflow-hidden"
-                  >
-                    <div className={`h-40 bg-gradient-to-br ${getCategoryGradient(index)} relative overflow-hidden rounded-t-lg`}>
-                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
-                      <div className="absolute top-3 left-3">
-                        <Badge 
-                          variant="secondary" 
-                          className={`backdrop-blur-sm bg-white/20 text-white border-0 ${getDifficultyColor(quiz.difficulty)}`}
-                        >
-                          {quiz.difficulty || 'Medium'}
-                        </Badge>
-                      </div>
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <div className="flex flex-wrap gap-1">
-                          {quiz.categories?.slice(0, 2).map((cat: any) => (
-                            <Badge 
-                              key={cat.id} 
-                              variant="secondary" 
-                              className="backdrop-blur-sm bg-white/20 text-white border-0 text-xs"
-                            >
-                              {cat.name}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <CardHeader className="p-4 pb-2">
-                      <CardTitle className="text-lg font-semibold line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {quiz.title}
-                      </CardTitle>
-                      <CardDescription className="text-sm line-clamp-2">
-                        {quiz.description || 'Test your knowledge with this engaging quiz'}
-                      </CardDescription>
-                    </CardHeader>
-                    
-                    <CardContent className="p-4 pt-0">
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-blue-500" />
-                          <span>{quiz.totalParticipants?.toLocaleString() || '0'}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span>{quiz.duration || '10'}m</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                {sortedQuizzes?.map((quiz: any) => (
+                <Card
+  key={quiz.id}
+  className="group cursor-pointer border border-gray-200 hover:shadow-xl hover:border-blue-200 transition-all duration-300 rounded-2xl overflow-hidden bg-white"
+>
+  {/* Thumbnail section */}
+  <div className="relative h-44 overflow-hidden">
+    <Image
+      src={quiz.thumbnailUrl || "/default-quiz-thumbnail.jpg"}
+      alt={quiz.title}
+      fill
+      className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+    />
+
+    {/* Gradient overlay */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent transition-opacity duration-300 group-hover:opacity-70" />
+
+    {/* Difficulty badge */}
+    <div className="absolute top-3 left-3">
+      <Badge
+        variant="secondary"
+        className={`px-2 py-1 text-xs font-medium backdrop-blur-sm bg-white/30 text-white border-0 shadow-sm ${getDifficultyColor(
+          quiz.difficulty
+        )}`}
+      >
+        {quiz.difficulty || "Medium"}
+      </Badge>
+    </div>
+
+    {/* Categories */}
+    <div className="absolute bottom-3 left-3 flex flex-wrap gap-1">
+      {quiz.categories?.slice(0, 2).map((cat) => (
+        <Badge
+          key={cat.id}
+          variant="secondary"
+          className="px-2 py-0.5 text-xs font-medium backdrop-blur-sm bg-white/25 text-white border-0 shadow-sm"
+        >
+          {cat.name}
+        </Badge>
+      ))}
+    </div>
+  </div>
+
+  {/* Content */}
+  <CardHeader className="p-4 pb-2">
+    <CardTitle className="text-lg font-semibold leading-snug text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+      {quiz.title}
+    </CardTitle>
+    <CardDescription className="text-sm text-gray-500 mt-1 line-clamp-1">
+      {quiz.description || "Test your knowledge with this engaging quiz."}
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent className="p-4 pt-0">
+    <div className="flex items-center justify-between text-sm text-gray-500">
+      <div className="flex items-center gap-1">
+        <Users className="h-4 w-4 text-blue-500" />
+        <span>{quiz.totalParticipants?.toLocaleString() || "0"}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <Clock className="h-4 w-4 text-gray-500" />
+        <span>{quiz.duration || "10"}s</span>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
                 ))}
               </div>
             )}

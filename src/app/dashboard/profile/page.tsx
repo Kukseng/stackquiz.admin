@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import Image from 'next/image';
 import { 
   useGetCurrentUserQuery, 
   useUpdateCurrentUserMutation,
