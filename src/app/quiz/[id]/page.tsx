@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useGetQuizByIdQuery } from '@/services/adminApi';
-import { ArrowLeft, Clock, Users, Star, Award, PlayCircle, Share2, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Star, Award, Share2, Eye, EyeOff } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from 'next/image';
 
@@ -139,7 +139,7 @@ export default function QuizDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
-                  {quiz.longDescription || quiz.description || "Test your knowledge and challenge yourself with this engaging quiz. Perfect for learning and entertainment!"}
+                  {quiz.description || "Test your knowledge and challenge yourself with this engaging quiz. Perfect for learning and entertainment!"}
                 </p>
                 
                 {/* Quiz Stats */}
@@ -151,12 +151,12 @@ export default function QuizDetailPage() {
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <Users className="h-6 w-6 mx-auto text-purple-600 mb-2" />
-                    <p className="text-2xl font-bold text-purple-600">{quiz.totalParticipants?.toLocaleString() || "0"}</p>
+                    <p className="text-2xl font-bold text-purple-600">0</p>
                     <p className="text-xs text-muted-foreground">Participants</p>
                   </div>
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
                     <Star className="h-6 w-6 mx-auto text-yellow-600 mb-2" />
-                    <p className="text-2xl font-bold text-yellow-600">{quiz.averageRating?.toFixed(1) || "0.0"}</p>
+                    <p className="text-2xl font-bold text-yellow-600">0.0</p>
                     <p className="text-xs text-muted-foreground">Rating</p>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -234,7 +234,7 @@ export default function QuizDetailPage() {
             )}
 
             {/* Topics Covered */}
-            {quiz.topics && quiz.topics.length > 0 && (
+            {/* {quiz.topics && quiz.topics.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Topics Covered</CardTitle>
@@ -249,7 +249,7 @@ export default function QuizDetailPage() {
                   </div>
                 </CardContent>
               </Card>
-            )}
+            )} */}
           </div>
 
           {/* Sidebar */}
@@ -286,7 +286,7 @@ export default function QuizDetailPage() {
             </Card>
 
             {/* Creator Info */}
-            {quiz.creator && (
+            {/* {quiz.creator && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Created By</CardTitle>
@@ -303,7 +303,7 @@ export default function QuizDetailPage() {
                   </div>
                 </CardContent>
               </Card>
-            )}
+            )} */}
           </div>
         </div>
       </div>

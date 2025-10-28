@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-import { DashboardLayout } from '@/components/DashboardLayout';
 import { useGetAllQuizzeQuery, useGetCategoriesQuery } from '@/services/adminApi';
 import { Search, Users, Clock, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +23,7 @@ export default function ExploreComponent() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filter quizzes based on search and category
-  const filteredQuizzes = quizzes?.filter(quiz => {
+  const filteredQuizzes = quizzes?.filter((quiz: any) => {
     const matchesSearch = quiz.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          quiz.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || 
@@ -33,7 +32,7 @@ export default function ExploreComponent() {
   });
 
   // Sort quizzes
-  const sortedQuizzes = filteredQuizzes?.sort((a, b) => {
+  const sortedQuizzes = filteredQuizzes?.sort((a: any, b: any) => {
     switch (sortBy) {
       case 'popular':
         return (b.totalParticipants || 0) - (a.totalParticipants || 0);
@@ -245,7 +244,7 @@ export default function ExploreComponent() {
 
                       {/* Categories */}
                       <div className="absolute bottom-3 left-3 flex flex-wrap gap-1">
-                        {quiz.categories?.slice(0, 2).map((cat) => (
+                        {quiz.categories?.slice(0, 2).map((cat: any) => (
                           <Badge
                             key={cat.id}
                             variant="secondary"

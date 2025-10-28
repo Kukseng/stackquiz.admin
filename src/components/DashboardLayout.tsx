@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import Image from 'next/image';
 import { Search, Calendar, Bell, ChevronDown } from "lucide-react";
-import { 
-  BarChart3, Users, TrendingUp, Shield, Compass, 
-  Settings, LogOut, Menu, X, AlertTriangle, User
+import {
+  BarChart3, Users, TrendingUp, Shield, Compass,
+  LogOut, Menu, X, AlertTriangle, User
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useGetCurrentUserQuery } from '@/services/adminApi';

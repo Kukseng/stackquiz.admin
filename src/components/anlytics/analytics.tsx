@@ -14,8 +14,7 @@ import {
   Legend,
   Filler,
 } from "chart.js"
-import { ChevronDown, TrendingUp, Users, Award, Activity, ArrowUp, ArrowDown, Clock, Target } from "lucide-react"
-import { useTheme } from "next-themes"
+import { ChevronDown, Users, Award, Activity, ArrowUp, ArrowDown, Target } from "lucide-react"
 import { useGetAdminDashboardQuery, useGetAdmindashboardbyTimeQuery } from "@/services/adminApi"
 
 ChartJS.register(
@@ -74,7 +73,7 @@ interface DashboardStats {
 
 export default function AnalyticsComponent() {
   const [timeRange, setTimeRange] = useState<TimeRange>("all")
-  const { theme } = useTheme()
+  // const { theme } = useTheme()
 
   const daysMap: Record<TimeRange, number> = {
     today: 1,
@@ -97,7 +96,7 @@ export default function AnalyticsComponent() {
     error: periodError,
   } = useGetAdmindashboardbyTimeQuery({ days: daysMap[timeRange] }, { skip: timeRange === "all" })
 
-  const stats: DashboardStats = timeRange === "all" ? allTimeData : periodData
+  const stats: DashboardStats | undefined = timeRange === "all" ? allTimeData : periodData
   const loading = timeRange === "all" ? allTimeLoading : periodLoading
   const error = timeRange === "all" ? allTimeError : periodError
 
@@ -262,7 +261,7 @@ export default function AnalyticsComponent() {
     )
   }
 
-  const isDark = theme === "dark"
+  // const isDark = theme === "dark"
   const completionRate = stats.totalSessions > 0 ? (stats.completedSessions / stats.totalSessions) * 100 : 0
   const { labels, sessionsData, participantsData } = generateChartData()
 
@@ -428,14 +427,14 @@ export default function AnalyticsComponent() {
                           pointStyle: "circle",
                           padding: 20,
                           color: "rgb(75, 85, 99)",
-                          font: { size: 12, weight: "500" },
+                          font: { size: 12, weight: "normal" },
                         },
                       },
                       tooltip: {
                         backgroundColor: "rgba(0, 0, 0, 0.8)",
                         padding: 12,
                         cornerRadius: 8,
-                        titleFont: { size: 13, weight: "600" },
+                        titleFont: { size: 13, weight: "bold" },
                         bodyFont: { size: 12 },
                         displayColors: true,
                         usePointStyle: true,
@@ -509,7 +508,7 @@ export default function AnalyticsComponent() {
                       backgroundColor: "rgba(0, 0, 0, 0.8)",
                       padding: 12,
                       cornerRadius: 8,
-                      titleFont: { size: 13, weight: "600" },
+                      titleFont: { size: 13, weight: "bold" },
                       bodyFont: { size: 12 },
                     },
                   },
@@ -518,7 +517,7 @@ export default function AnalyticsComponent() {
                       grid: { display: false },
                       ticks: { 
                         color: "rgb(107, 114, 128)", 
-                        font: { size: 11, weight: "500" },
+                        font: { size: 11, weight: "normal" },
                         padding: 8,
                       },
                       border: { display: false },
