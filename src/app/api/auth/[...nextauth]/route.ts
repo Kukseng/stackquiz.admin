@@ -1,9 +1,6 @@
 // src/app/api/auth/[...nextauth]/route.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import NextAuth, { type NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
-import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 /** Force runtime execution */
@@ -15,12 +12,6 @@ export const runtime = "nodejs";
 // Environment Variable Validation
 // ============================================================
 const requiredEnvVars = [
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
-  "GH_CLIENT_ID",
-  "GH_CLIENT_SECRET",
-  "FACEBOOK_CLIENT_ID",
-  "FACEBOOK_CLIENT_SECRET",
   "NEXTAUTH_SECRET",
   "NEXT_PUBLIC_API_URL",
 ];
@@ -76,35 +67,6 @@ function hasAdminRole(token: string): boolean {
   });
   
   return hasAdmin;
-}
-
-async function post(path: string, body: unknown) {
-  const base = resolveApiBase();
-  const url = `${base}/${String(path).replace(/^\/+/, "")}`;
-  
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "NextAuth-Client/1.0",
-      },
-      cache: "no-store",
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      const errMsg = await res.text();
-      console.error(
-        `[NextAuth] API call failed: ${res.status} ${res.statusText} for ${url}\n${errMsg}`
-      );
-    }
-    
-    return res;
-  } catch (error) {
-    console.error(`[NextAuth] Network error calling ${url}:`, error);
-    throw error;
-  }
 }
 
 // Token refresh helper
@@ -166,36 +128,6 @@ const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: { 
-        params: { 
-          scope: "openid email profile",
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        } 
-      },
-    }),
-    GitHubProvider({
-      clientId: process.env.GH_CLIENT_ID!,
-      clientSecret: process.env.GH_CLIENT_SECRET!,
-      authorization: { 
-        params: { 
-          scope: "read:user user:email" 
-        } 
-      },
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      authorization: { 
-        params: { 
-          scope: "public_profile,email" 
-        } 
-      },
-    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -205,7 +137,7 @@ const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
           console.error("[CredentialsProvider] Missing credentials");
-          return null;
+          throw new Error("Username and password are required");
         }
 
         try {
@@ -219,8 +151,13 @@ const authOptions: NextAuthOptions = {
           });
 
           if (!res.ok) {
-            console.error(`[CredentialsProvider] Login failed: ${res.status}`);
-            return null;
+            const errorData = await res.json().catch(() => ({}));
+            console.error(`[CredentialsProvider] Login failed: ${res.status}`, errorData);
+            
+            if (res.status === 401) {
+              throw new Error("Not allow normal users");
+            }
+            throw new Error("CredentialsSignin");
           }
 
           const json = await res.json();
@@ -228,17 +165,24 @@ const authOptions: NextAuthOptions = {
 
           if (!data || !data.access_token) {
             console.error("[CredentialsProvider] No access token in response");
-            return null;
-          }
-
-          // CHECK IF USER HAS ADMIN ROLE IN JWT
-          if (!hasAdminRole(data.access_token)) {
-            console.error(`[CredentialsProvider] Access denied: User does not have ADMIN role`);
-            return null;
+            throw new Error("Authentication failed");
           }
 
           // Decode JWT to extract user info and roles
           const decoded = decodeJWT(data.access_token);
+          const userEmail = decoded?.email || decoded?.preferred_username || credentials.username;
+          const userRoles = decoded?.realm_access?.roles || [];
+
+          // CHECK IF USER HAS ADMIN ROLE IN JWT
+          if (!hasAdminRole(data.access_token)) {
+            console.error(`[CredentialsProvider] Access denied for user: ${userEmail}`, {
+              availableRoles: userRoles,
+              requiredRole: 'ADMIN'
+            });
+            throw new Error("AccessDenied");
+          }
+
+          console.log(`[CredentialsProvider] ADMIN user authenticated: ${userEmail}`);
 
           return {
             id: data.userId ?? decoded?.sub ?? credentials.username,
@@ -252,103 +196,35 @@ const authOptions: NextAuthOptions = {
             realm_access: decoded?.realm_access,
             resource_access: decoded?.resource_access,
           };
-        } catch (e) {
-          console.error("[CredentialsProvider] Login exception:", e);
-          return null;
+        } catch (e: any) {
+          console.error("[CredentialsProvider] Login exception:", e.message);
+          // Preserve specific error messages, especially for admin role check
+          throw e;
         }
       },
     }),
   ],
   pages: {
     signIn: "/login",
-    error: "/auth/error",
+    signOut: "/login",
+    error: "/login",
   },
   callbacks: {
-    async jwt({ token, account, profile, user }) {
-      // Handle initial sign-in
-      if (account && user) {
-        const email =
-          (user as any)?.email ??
-          (profile as any)?.email ??
-          token.email ??
-          null;
+    async jwt({ token, user }) {
+      // Handle initial sign-in with credentials
+      if (user) {
+        const email = (user as any)?.email ?? token.email ?? null;
 
-        // Credentials provider - token already in user object
-        if (account.provider === "credentials") {
-          token.apiAccessToken = (user as any).apiAccessToken;
-          token.apiRefreshToken = (user as any).apiRefreshToken;
-          token.apiAccessTokenExpires = Date.now() + ((user as any).expiresIn ?? 3600) * 1000;
-          token.userId = (user as any).id;
-          token.email = email;
-          token.realm_access = (user as any).realm_access;
-          token.resource_access = (user as any).resource_access;
-          
-          console.log(`[NextAuth] Credentials login success for ADMIN: ${email}`);
-          return token;
-        }
-
-        if (email) {
-          const givenName =
-            (profile as any)?.given_name ??
-            (profile as any)?.first_name ??
-            (user as any)?.name?.split(" ")?.[0] ??
-            "";
-          const familyName =
-            (profile as any)?.family_name ??
-            (profile as any)?.last_name ??
-            (user as any)?.name?.split(" ")?.slice(1).join(" ") ??
-            "";
-          const baseUsername =
-            token.name ?? (user as any)?.name ?? email.split("@")[0];
-          const provider = account.provider;
-
-          try {
-            console.log(
-              `[NextAuth] Registering OAuth user: ${email} with provider: ${provider}`
-            );
-            
-            const r = await post("auth/oauth/register", {
-              email,
-              firstName: givenName,
-              lastName: familyName,
-              username: baseUsername,
-              provider,
-              providerId: account.providerAccountId,
-              image: (user as any)?.image ?? null,
-            });
-
-            if (r.ok) {
-              const data = await r.json();
-              const payload = (data as any).data ?? data;
-              
-              const accessToken = payload.accessToken ?? payload.access_token;
-              
-              if (!hasAdminRole(accessToken)) {
-                console.error(`[NextAuth] OAuth access denied: User does not have ADMIN role`);
-                token.error = "NoAdminRole";
-                return token;
-              }
-
-              const decoded = decodeJWT(accessToken);
-              
-              token.apiAccessToken = accessToken;
-              token.apiRefreshToken = payload.refreshToken ?? payload.refresh_token ?? null;
-              token.apiAccessTokenExpires = Date.now() + (payload.expiresIn ?? payload.expires_in ?? 3600) * 1000;
-              token.email = email;
-              token.userId = payload.userId ?? payload.user_id ?? decoded?.sub ?? null;
-              token.realm_access = decoded?.realm_access;
-              token.resource_access = decoded?.resource_access;
-              
-              console.log(`[NextAuth] OAuth registration success for ADMIN: ${email}`);
-            } else {
-              console.error(`[NextAuth] OAuth registration failed for: ${email}`);
-              token.error = "OAuthRegistrationError";
-            }
-          } catch (e) {
-            console.error(`[NextAuth] OAuth registration exception for: ${email}`, e);
-            token.error = "OAuthRegistrationError";
-          }
-        }
+        token.apiAccessToken = (user as any).apiAccessToken;
+        token.apiRefreshToken = (user as any).apiRefreshToken;
+        token.apiAccessTokenExpires = Date.now() + ((user as any).expiresIn ?? 3600) * 1000;
+        token.userId = (user as any).id;
+        token.email = email;
+        token.realm_access = (user as any).realm_access;
+        token.resource_access = (user as any).resource_access;
+        
+        console.log(`[NextAuth] JWT created for ADMIN user: ${email}`);
+        return token;
       }
 
       // Handle token refresh
@@ -363,7 +239,11 @@ const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // Check for admin role error
       if (token.error === "NoAdminRole") {
-        throw new Error("Access denied: ADMIN role required");
+        throw new Error("Access denied. Your administrator privileges have been revoked. Please contact system support.");
+      }
+
+      if (token.error === "RefreshAccessTokenError") {
+        throw new Error("Your session has expired. Please sign in again.");
       }
 
       // Pass token data to session
@@ -376,10 +256,10 @@ const authOptions: NextAuthOptions = {
 
       // Update user info with roles
       if (session.user) {
-          session.user.email = token.email ?? session.user.email;
-          (session.user as any).id = token.userId ?? (session.user as any).id;
-          (session.user as any).realm_access = token.realm_access;
-          (session.user as any).resource_access = token.resource_access;
+        session.user.email = token.email ?? session.user.email;
+        (session.user as any).id = token.userId ?? (session.user as any).id;
+        (session.user as any).realm_access = token.realm_access;
+        (session.user as any).resource_access = token.resource_access;
       }
 
       return session;
@@ -394,11 +274,10 @@ const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    async signIn({ user, account }) {
-      console.log(`[NextAuth] User signed in:`, {
+    async signIn({ user }) {
+      console.log(`[NextAuth] ADMIN user signed in:`, {
         userId: user.id,
         email: user.email,
-        provider: account?.provider,
         roles: (user as any)?.realm_access?.roles,
       });
     },
@@ -415,5 +294,4 @@ const authOptions: NextAuthOptions = {
 
 const handler = NextAuth(authOptions);
 
-// Only export GET and POST handlers for Next.js App Router
 export { handler as GET, handler as POST };

@@ -1,14 +1,12 @@
-"use client"
-
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, MoreHorizontal, RefreshCw, AlertCircle, CheckCircle, Eye, XCircle, PauseCircle, Filter, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, MoreHorizontal, RefreshCw, AlertCircle, CheckCircle, Eye, XCircle, PauseCircle, Filter, ChevronLeft, ChevronRight, PlayCircle, MessageSquare, Bell } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
-import { useGetAllQuizzesQuery, useSuspendQuizMutation, useUpdateQuizStatusMutation } from "@/services/adminApi"
+import { useGetAllQuizzesQuery, useSuspendQuizMutation, useUnsuspendQuizMutation, useUpdateQuizStatusMutation, useGetAllFeedbackQuery } from "@/services/adminApi"
 import {
   Dialog,
   DialogContent,
@@ -27,12 +25,20 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const ITEMS_PER_PAGE = 10
 
-export function ModerationTable() {
+export default function EnhancedModerationTable() {
   const { data: quizzes = [], isLoading, refetch } = useGetAllQuizzesQuery({ active: true })
-  const [suspendQuiz] = useSuspendQuizMutation()
+  const { data: feedbackData = [] } = useGetAllFeedbackQuery()
+  const [suspendQuiz, { isLoading: isSuspending }] = useSuspendQuizMutation()
+  const [unsuspendQuiz, { isLoading: isUnsuspending }] = useUnsuspendQuizMutation()
   const [updateQuizStatus] = useUpdateQuizStatusMutation()
 
   const [searchQuery, setSearchQuery] = useState("")
@@ -43,7 +49,11 @@ export function ModerationTable() {
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null)
   const [suspendReason, setSuspendReason] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [notificationOpen, setNotificationOpen] = useState(false)
   const { toast } = useToast()
+
+  // Count unread notifications (feedback + reports)
+  const unreadNotifications = feedbackData.length
 
   const handleSuspend = async () => {
     if (!selectedQuizId || !suspendReason.trim()) {
@@ -56,7 +66,15 @@ export function ModerationTable() {
     }
 
     try {
-      await suspendQuiz({ quizId: selectedQuizId, reason: suspendReason }).unwrap()
+      console.log("Attempting to suspend quiz:", { quizId: selectedQuizId, reason: suspendReason })
+      
+      const result = await suspendQuiz({ 
+        quizId: selectedQuizId, 
+        reason: suspendReason 
+      }).unwrap()
+      
+      console.log("Suspend success:", result)
+      
       toast({
         title: "Success",
         description: "Quiz suspended successfully",
@@ -65,11 +83,63 @@ export function ModerationTable() {
       setSuspendReason("")
       setSelectedQuizId(null)
       refetch()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error suspending quiz:", error)
+      console.error("Error details:", JSON.stringify(error, null, 2))
+      
+      // Extract error message
+      let errorMessage = "Failed to suspend quiz"
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error
+      } else if (error?.message) {
+        errorMessage = error.message
+      } else if (error?.status) {
+        errorMessage = `Server error: ${error.status}`
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to suspend quiz",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUnsuspend = async (quizId: string) => {
+    try {
+      console.log("Attempting to unsuspend quiz:", quizId)
+      
+      const result = await unsuspendQuiz(quizId).unwrap()
+      
+      console.log("Unsuspend success:", result)
+      
+      toast({
+        title: "Success",
+        description: "Quiz unsuspended successfully",
+      })
+      refetch()
+    } catch (error: any) {
+      console.error("Error unsuspending quiz:", error)
+      console.error("Error details:", JSON.stringify(error, null, 2))
+      
+      let errorMessage = "Failed to unsuspend quiz"
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.data?.error) {
+        errorMessage = error.data.error
+      } else if (error?.message) {
+        errorMessage = error.message
+      } else if (error?.status) {
+        errorMessage = `Server error: ${error.status}`
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
         variant: "destructive",
       })
     }
@@ -79,6 +149,11 @@ export function ModerationTable() {
     if (action === "Suspend") {
       setSelectedQuizId(quizId)
       setSuspendDialogOpen(true)
+      return
+    }
+
+    if (action === "Unsuspend") {
+      handleUnsuspend(quizId)
       return
     }
 
@@ -97,11 +172,20 @@ export function ModerationTable() {
       })
       
       refetch()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating quiz:", error)
+      
+      let errorMessage = `Failed to ${action.toLowerCase()} quiz`
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
       toast({
         title: "Error",
-        description: `Failed to ${action.toLowerCase()} quiz`,
+        description: errorMessage,
         variant: "destructive",
       })
     }
@@ -124,13 +208,11 @@ export function ModerationTable() {
     return matchesSearch && matchesStatus && matchesDifficulty
   })
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredQuizzes.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
   const paginatedQuizzes = filteredQuizzes.slice(startIndex, endIndex)
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, statusFilter, difficultyFilter])
@@ -140,7 +222,6 @@ export function ModerationTable() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pages = []
     const maxVisible = 5
@@ -184,6 +265,8 @@ export function ModerationTable() {
         return { variant: "secondary" as const, icon: Eye, label: "Draft", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20" }
       case "ARCHIVED":
         return { variant: "destructive" as const, icon: XCircle, label: "Archived", color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20" }
+      case "SUSPENDED":
+        return { variant: "outline" as const, icon: PauseCircle, label: "Suspended", color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20" }
       default:
         return { variant: "outline" as const, icon: AlertCircle, label: status, color: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20" }
     }
@@ -205,45 +288,23 @@ export function ModerationTable() {
   if (isLoading) {
     return (
       <div className="space-y-6 p-6">
-        {/* Header Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-8 w-64" />
           <Skeleton className="h-4 w-96" />
         </div>
-
-        {/* Stats Cards Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border bg-card p-6">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg" />
-                <div className="space-y-2">
-                  <Skeleton className="h-7 w-16" />
-                  <Skeleton className="h-3 w-20" />
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
           ))}
         </div>
-
-        {/* Table Skeleton */}
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-          <div className="p-4 border-b">
-            <Skeleton className="h-10 w-full max-w-md" />
-          </div>
-          <div className="p-6 space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
+        <Skeleton className="h-96 w-full" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 min-h-screen">
-      {/* Header */}
+      {/* Header - keeping your existing code */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div>
@@ -254,21 +315,73 @@ export function ModerationTable() {
               Review and manage quiz submissions across the platform
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Notification Bell */}
+            <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="relative">
+                  <Bell className="h-4 w-4" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold">
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-sm">Notifications</h4>
+                    <Badge variant="secondary" className="text-xs">
+                      {unreadNotifications} new
+                    </Badge>
+                  </div>
+                  <ScrollArea className="h-[300px]">
+                    <div className="space-y-2">
+                      {feedbackData.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground text-sm">
+                          No new notifications
+                        </div>
+                      ) : (
+                        feedbackData.slice(0, 10).map((feedback: any, idx: number) => (
+                          <div key={idx} className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                            <div className="flex items-start gap-2">
+                              <MessageSquare className="h-4 w-4 text-blue-500 mt-0.5" />
+                              <div className="flex-1 space-y-1">
+                                <p className="text-sm font-medium">New Feedback</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                  {feedback.comment || feedback.message || 'Participant submitted feedback'}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Quiz: {feedback.quizTitle || 'Unknown'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="rounded-xl border bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-950 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-blue-500/10">
@@ -309,6 +422,20 @@ export function ModerationTable() {
           </div>
         </div>
 
+        <div className="rounded-xl border bg-gradient-to-br from-white to-orange-50 dark:from-gray-900 dark:to-orange-950 p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-orange-500/10">
+              <PauseCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {quizzes.filter((q) => q.status === "SUSPENDED").length}
+              </p>
+              <p className="text-xs text-muted-foreground font-medium">Suspended</p>
+            </div>
+          </div>
+        </div>
+
         <div className="rounded-xl border bg-gradient-to-br from-white to-red-50 dark:from-gray-900 dark:to-red-950 p-6 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-red-500/10">
@@ -326,7 +453,6 @@ export function ModerationTable() {
 
       {/* Table Card */}
       <div className="rounded-xl border bg-card shadow-lg overflow-hidden">
-        {/* Filters Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 border-b p-4 bg-muted/30">
           <div className="relative flex-1 w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -348,6 +474,7 @@ export function ModerationTable() {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="PUBLISHED">Published</SelectItem>
                 <SelectItem value="DRAFT">Draft</SelectItem>
+                <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 <SelectItem value="ARCHIVED">Archived</SelectItem>
               </SelectContent>
             </Select>
@@ -366,7 +493,6 @@ export function ModerationTable() {
           </div>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -402,6 +528,7 @@ export function ModerationTable() {
                 paginatedQuizzes.map((quiz) => {
                   const statusConf = getStatusConfig(quiz.status)
                   const StatusIcon = statusConf.icon
+                  const isSuspended = quiz.status === "SUSPENDED"
                   
                   return (
                     <TableRow key={quiz.id} className="group hover:bg-muted/50 transition-colors">
@@ -453,28 +580,27 @@ export function ModerationTable() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-[160px]">
-                            <DropdownMenuItem 
-                              onClick={() => handleAction(quiz.id, "Approve")}
-                              className="cursor-pointer"
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleAction(quiz.id, "Review")}
-                              className="cursor-pointer"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Review
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleAction(quiz.id, "Suspend")}
-                              className="cursor-pointer"
-                            >
-                              <PauseCircle className="h-4 w-4 mr-2" />
-                              Suspend
-                            </DropdownMenuItem>
+                            {isSuspended ? (
+                              <DropdownMenuItem 
+                                onClick={() => handleAction(quiz.id, "Unsuspend")}
+                                className="cursor-pointer text-green-600"
+                                disabled={isUnsuspending}
+                              >
+                                <PlayCircle className="h-4 w-4 mr-2" />
+                                Unsuspend
+                              </DropdownMenuItem>
+                            ) : (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleAction(quiz.id, "Suspend")}
+                                  className="cursor-pointer"
+                                >
+                                  <PauseCircle className="h-4 w-4 mr-2" />
+                                  Suspend
+                                </DropdownMenuItem>
+                              </>
+                            )}
                             <DropdownMenuItem 
                               onClick={() => handleAction(quiz.id, "Reject")}
                               className="cursor-pointer text-destructive focus:text-destructive"
@@ -493,7 +619,6 @@ export function ModerationTable() {
           </Table>
         </div>
 
-        {/* Footer with pagination */}
         {paginatedQuizzes.length > 0 && (
           <div className="border-t bg-muted/30 px-4 py-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
@@ -501,7 +626,6 @@ export function ModerationTable() {
               <span className="font-medium text-foreground">{filteredQuizzes.length}</span> quizzes
             </p>
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <Button
@@ -582,15 +706,23 @@ export function ModerationTable() {
                 setSuspendDialogOpen(false)
                 setSuspendReason("")
               }}
+              disabled={isSuspending}
             >
               Cancel
             </Button>
             <Button 
               onClick={handleSuspend} 
               variant="destructive"
-              disabled={!suspendReason.trim()}
+              disabled={!suspendReason.trim() || isSuspending}
             >
-              Suspend Quiz
+              {isSuspending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Suspending...
+                </>
+              ) : (
+                "Suspend Quiz"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FaUser, FaKey } from "react-icons/fa";
 import { HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
@@ -22,7 +22,7 @@ const loginSchema = z.object({
 
 type LoginData = z.infer<typeof loginSchema>;
 
-const LoginForm = () => {
+const LoginFormContent = () => {
   const { language, toggleLanguage } = useLanguage();
   const t = language === "en" ? en.login : kh.login;
   const fontClass = language === "en" ? "en-font" : "kh-font";
@@ -38,9 +38,31 @@ const LoginForm = () => {
 
   const router = useRouter();
   const { update } = useSession();
+  const searchParams = useSearchParams();
+  
+  // Get callback URL from query params (where user wanted to go)
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  // Map NextAuth error codes to user-friendly messages
+  const getErrorMessage = (errorCode: string | null | undefined): string => {
+    if (!errorCode) return "Login failed";
+    
+    switch (errorCode) {
+      case "CredentialsSignin":
+        return "Invalid username or password";
+      case "AccessDenied":
+        return "Not allowed. Normal users are not allowed to login.";
+      case "Configuration":
+        return "Server configuration error. Please contact support.";
+      case "SessionRequired":
+        return "Please sign in to continue.";
+      default:
+        return errorCode;
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -50,8 +72,10 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
+      // Validate form data
       loginSchema.parse(formData);
 
+      // Attempt login
       const res = await signIn("credentials", {
         redirect: false,
         username: formData.username,
@@ -59,14 +83,19 @@ const LoginForm = () => {
       });
 
       if (!res || res.error) {
-        setGeneralError(res?.error || "Login failed");
+        // Map error code to user-friendly message
+        const errorMessage = getErrorMessage(res?.error);
+        setGeneralError(errorMessage);
         setIsLoading(false);
         return;
       }
 
+      // Update session
       await update();
       await new Promise((resolve) => setTimeout(resolve, 100));
-      router.push("/dashboard");
+      
+      // Redirect to callback URL (preserves where user wanted to go)
+      router.push(callbackUrl);
       router.refresh();
       setIsLoading(false);
     } catch (err: any) {
@@ -82,15 +111,6 @@ const LoginForm = () => {
       } else {
         setGeneralError("An unexpected error occurred.");
       }
-    }
-  };
-
-  const handleOAuthLogin = async (provider: string) => {
-    try {
-      await signIn(provider, { callbackUrl: "/dashboard", redirect: true });
-    } catch (error) {
-      console.error(`Error signing in with ${provider}:`, error);
-      setGeneralError(`Failed to sign in with ${provider}`);
     }
   };
 
@@ -148,7 +168,6 @@ const LoginForm = () => {
               error={errors.username}
               icon={<FaUser className="text-gray-400 h-4 w-4" />}
               autoComplete="username"
-              disabled={isLoading}
             />
             <FormField
               id="password"
@@ -168,7 +187,6 @@ const LoginForm = () => {
                 )
               }
               autoComplete="current-password"
-              disabled={isLoading}
             />
             <button
               type="submit"
@@ -178,32 +196,22 @@ const LoginForm = () => {
               {isLoading ? "Logging in..." : t.loginButton}
             </button>
           </form>
-
-          {/* Social login */}
-          <div className="text-center my-3">
-            <span className="text-gray-500 text-sm">{t.or}</span>
-          </div>
-          <div className="flex justify-center space-x-2">
-            <button onClick={() => handleOAuthLogin("google")} disabled={isLoading} className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
-              <Image src="/social_media_icon/google.svg" alt="Google Icon" width={40} height={40} />
-            </button>
-            <button onClick={() => handleOAuthLogin("github")} disabled={isLoading} className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
-              <Image src="/social_media_icon/github.svg" alt="GitHub Icon" width={36} height={36} />
-            </button>
-            <button onClick={() => handleOAuthLogin("facebook")} disabled={isLoading} className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed">
-              <Image src="/social_media_icon/fb.svg" alt="Facebook Icon" width={36} height={36} />
-            </button>
-          </div>
-
-          <p className="text-center text-gray-500 mt-3 text-sm">
-            {t.noAccount}{" "}
-            <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">
-              {t.signup}
-            </Link>
-          </p>
         </div>
       </div>
     </div>
+  );
+};
+
+// Wrapper component with Suspense boundary
+const LoginForm = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">Loading...</div>
+      </div>
+    }>
+      <LoginFormContent />
+    </Suspense>
   );
 };
 
